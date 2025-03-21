@@ -1,0 +1,90 @@
+---
+title: "Simulation of Group Sequential Trial with a Time-to-Event Endpoint"
+author: "Han Zhang"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  html_document: 
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(class.source = "foldable")
+```
+
+```{r aljai, message=FALSE, echo=FALSE}
+library(targets)
+library(rpact)
+library(TrialSimulator)
+library(data.table)
+library(kableExtra)
+library(tidyverse)
+```
+
+This document replicates simulation result of a group sequential design for a time-to-event endpoint. Analytic calculation is based on `rpact::getPowerSurvival`, and simulation is based on 10,000 replicates using `TrialSimulator`. 
+
+The design is under the following assumptions: 
+
+- Group sequential with one interim at information fraction 66% using an O'Brien-Fleming type $\alpha$-spending function, one-sided level 2.5%, and power 80%. 
+
+- Exponential distributed `PFS` with a median of 60 months in placebo. 
+
+- Hazard ratio 0.74 between treatment and placebo arms. 
+
+- Dropout rate 2.5% at 12 months in both arms. 
+
+- Linear ramp up recruitment rate until the 6th month at 42 patients per month. 
+
+- 1200 patients are 1:1 randomized into two arms. 
+
+This example is discussed in `rpact` [vignette](https://www.rpact.org/vignettes/planning/rpact_survival_simulation_examples/). 
+
+## Analytic Calculation Using `rpact`
+
+```{r algna}
+design <- getDesignGroupSequential(
+    informationRates = c(0.66, 1),
+    typeOfDesign = "asOF", 
+    sided = 1, 
+    alpha = 0.025, 
+    beta = 1 - 0.8
+)
+
+sampleSizeResult <- getSampleSizeSurvival(
+  design,
+  median2 = 60, 
+  hazardRatio = 0.74,
+  dropoutRate1 = 0.025, 
+  dropoutRate2 = 0.025, 
+  dropoutTime = 12,
+  accrualTime = c(0, 1, 2, 3, 4, 5, 6),
+  accrualIntensity = c(6, 12, 18, 24, 30, 36, 42),
+  maxNumberOfSubjects = 1200
+)
+
+sampleSizeResult |> summary()
+```
+
+## Simulation Using `TrialSimulator`
+
+```{r laeig}
+tar_load(test)
+
+with(test, 
+     data.table(
+       'Interim analysis time' = mean(`event_time_<interim analysis>`), 
+       'Final analysis time' = mean(`event_time_<final analysis>`), 
+       'Power at interim' = mean(`decision_<interim>` == 'reject'), 
+       'Overall power' = mean(`decision_<interim>` == 'reject' | test$`decision_<final>` == 'reject'), 
+       'Expected Number of enrolled patients' = mean(ifelse(`decision_<interim>` == 'reject', 
+                                                            `n_events_<interim analysis>_<patient_id>`,  
+                                                            `n_events_<final analysis>_<patient_id>`)), 
+       'Expected trial duration' = mean(ifelse(`decision_<interim>` == 'reject', 
+                                               `event_time_<interim analysis>`, 
+                                               `event_time_<final analysis>`))
+     ) %>% 
+       kable()
+)
+
+```
+
