@@ -1,0 +1,16 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
+simulate_example1|function|e4d3a5597786e623
+.Random.seed|object|8c6c6d68dff046e4
+n_cores|object|a3334f158ed3ccb5
+n_sims|object|db4d188358be8543
+test_batch|stem|20af67588d18ec49|d7a03b94b38788d3|2c530c1562a7fbd1|509571892||t20168.5954822785s|s99b|99|rds|local|vector||test_batch_6e95f3b2b5476d92*test_batch_b3a2147ad240fae3*test_batch_f5968f8186dadba0*test_batch_50003b5d5254d75e*test_batch_5105e1ee401f4beb*test_batch_943cd151fa74649e*test_batch_a7098e9b959e7c27*test_batch_3a45cb041330bd5a|0||
+test_61e1b49d639a5bd8|branch|69a201826380a011|1773ef7c86e52624|78334d89677b4296|-1303200917||t20168.6004685559s|s52689b|52689|rds|local|vector|test||430.615||
+test_b805cfbdb3195ce3|branch|775fe90a9f9a601f|1773ef7c86e52624|78334d89677b4296|-1092854693||t20168.6005358394s|s52652b|52652|rds|local|vector|test||435.561||
+test_f1e4cf91a7060bad|branch|31c419de92d73446|1773ef7c86e52624|78334d89677b4296|-709214850||t20168.6005442391s|s52674b|52674|rds|local|vector|test||436.312||
+test_8b0b05628d42fe85|branch|b2a57ce090020aae|1773ef7c86e52624|78334d89677b4296|-667399348||t20168.6005448189s|s52677b|52677|rds|local|vector|test||436.272||
+test_fd4e5a84965fe121|branch|33bc051b5e37e08a|1773ef7c86e52624|78334d89677b4296|-25653631||t20168.6005473292s|s52628b|52628|rds|local|vector|test||436.414||
+test_9da490d23d88280e|branch|62058282f23f3df0|1773ef7c86e52624|78334d89677b4296|1401612298||t20168.6005487367s|s52633b|52633|rds|local|vector|test||436.637||
+test_ab5bb1a44de7063b|branch|b7d081bc34a82e0e|1773ef7c86e52624|78334d89677b4296|-255223637||t20168.6005488457s|s52678b|52678|rds|local|vector|test||436.654||
+test_a1adbed3062fb78c|branch|5ccafab019391da4|1773ef7c86e52624|78334d89677b4296|-1094606229||t20168.6005495848s|s52710b|52710|rds|local|vector|test||436.725||
+test|pattern|723e47fb54dfe8cf|1773ef7c86e52624||1839796588||||421341|rds|local|vector||test_61e1b49d639a5bd8*test_b805cfbdb3195ce3*test_f1e4cf91a7060bad*test_8b0b05628d42fe85*test_a1adbed3062fb78c*test_ab5bb1a44de7063b*test_9da490d23d88280e*test_fd4e5a84965fe121|3485.19||
+example1|stem|c218f768b445e2ac|1fbdb2f9e5948d43|d6b2e66a988e5e4e|532651144|docs/example1.html*docs/example1.Rmd|t20168.6005681998s|s635169b|635169|file|local|vector|||1.116||
