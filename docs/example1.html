@@ -583,14 +583,15 @@ dropout rate(2) = 0.025, dropout time = 12.</p>
 </div>
 <div id="simulation-using-trialsimulator" class="section level2">
 <h2>Simulation Using <code>TrialSimulator</code></h2>
-<pre class="r foldable"><code>tar_load(test)
+<pre class="r foldable"><code>tar_load(example1)
 
-with(test, 
+with(example1, 
      data.table(
        &#39;Interim analysis time&#39; = mean(`event_time_&lt;interim analysis&gt;`), 
        &#39;Final analysis time&#39; = mean(`event_time_&lt;final analysis&gt;`), 
        &#39;Power at interim&#39; = mean(`decision_&lt;interim&gt;` == &#39;reject&#39;), 
-       &#39;Overall power&#39; = mean(`decision_&lt;interim&gt;` == &#39;reject&#39; | test$`decision_&lt;final&gt;` == &#39;reject&#39;), 
+       &#39;Overall power&#39; = mean(`decision_&lt;interim&gt;` == &#39;reject&#39; | 
+                                `decision_&lt;final&gt;` == &#39;reject&#39;), 
        &#39;Expected Number of enrolled patients&#39; = mean(ifelse(`decision_&lt;interim&gt;` == &#39;reject&#39;, 
                                                             `n_events_&lt;interim analysis&gt;_&lt;patient_id&gt;`,  
                                                             `n_events_&lt;final analysis&gt;_&lt;patient_id&gt;`)), 
@@ -621,12 +622,12 @@ with(test,
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">40.39317</td>
-<td align="right">55.24977</td>
-<td align="right">0.3981</td>
-<td align="right">0.7991</td>
+<td align="right">40.3961</td>
+<td align="right">55.25672</td>
+<td align="right">0.4073</td>
+<td align="right">0.8023</td>
 <td align="right">1200</td>
-<td align="right">49.32977</td>
+<td align="right">49.1894</td>
 </tr>
 </tbody>
 </table>

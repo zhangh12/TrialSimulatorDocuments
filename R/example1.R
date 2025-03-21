@@ -36,10 +36,10 @@ simulate_example1 <- function(){
   interim_action <- function(trial, event_name){
     locked_data <- trial$get_locked_data(event_name)
     
-    trial$save(fitCoxph(endpoint = 'pfs', 
+    trial$bind(fitCoxph(endpoint = 'pfs', 
                         placebo = 'control', 
-                        data = locked_data)[, c('p', 'info')], 
-               name = 'interim')
+                        data = locked_data), 
+               name = 'stats')
     NULL
   }
   
@@ -51,10 +51,10 @@ simulate_example1 <- function(){
   final_action <- function(trial, event_name){
     locked_data <- trial$get_locked_data(event_name)
     
-    trial$save(fitCoxph(endpoint = 'pfs', 
+    trial$bind(fitCoxph(endpoint = 'pfs', 
                         placebo = 'control', 
-                        data = locked_data)[, c('p', 'info')], 
-               name = 'final')
+                        data = locked_data), 
+               name = 'stats')
     
     gst <- GroupSequentialTest$new(
       alpha = .025, 
@@ -62,10 +62,12 @@ simulate_example1 <- function(){
       planned_max_info = 351
     )
     
+    stats <- trial$get_custom_data('stats')
+    
     gst$test(
-      observed_info = c(trial$get_output('interim_<info>'), trial$get_output('final_<info>')), 
+      observed_info = stats$info, 
       is_final = c(FALSE, TRUE), 
-      p_values = c(trial$get_output('interim_<p>'), trial$get_output('final_<p>'))
+      p_values = stats$p
     )
     
     ret <- gst$get_trajectory()$decision

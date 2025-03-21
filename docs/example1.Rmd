@@ -68,14 +68,15 @@ sampleSizeResult |> summary()
 ## Simulation Using `TrialSimulator`
 
 ```{r laeig}
-tar_load(test)
+tar_load(example1)
 
-with(test, 
+with(example1, 
      data.table(
        'Interim analysis time' = mean(`event_time_<interim analysis>`), 
        'Final analysis time' = mean(`event_time_<final analysis>`), 
        'Power at interim' = mean(`decision_<interim>` == 'reject'), 
-       'Overall power' = mean(`decision_<interim>` == 'reject' | test$`decision_<final>` == 'reject'), 
+       'Overall power' = mean(`decision_<interim>` == 'reject' | 
+                                `decision_<final>` == 'reject'), 
        'Expected Number of enrolled patients' = mean(ifelse(`decision_<interim>` == 'reject', 
                                                             `n_events_<interim analysis>_<patient_id>`,  
                                                             `n_events_<final analysis>_<patient_id>`)), 

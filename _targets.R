@@ -22,7 +22,7 @@ n_sims <- 10000
 
 list(
   tar_map_rep(
-    name = test,
+    name = example1,
     command = {
       simulate_example1()
     },
@@ -34,7 +34,7 @@ list(
   ,
   
   tar_render(
-    example1, 
+    html1, 
     'docs/example1.Rmd'
   )
 )
