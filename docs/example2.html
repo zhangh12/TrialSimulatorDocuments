@@ -13,7 +13,7 @@
 
 <meta name="date" content="2025-03-21" />
 
-<title>Simulation of Group Sequential Trial with a Time-to-Event Endpoint</title>
+<title>Simulation of Group Sequential Trial with a Binary Endpoint</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -439,7 +439,7 @@ display: none;
 
 
 <h1 class="title toc-ignore">Simulation of Group Sequential Trial with a
-Time-to-Event Endpoint</h1>
+Binary Endpoint</h1>
 <h4 class="author">Han Zhang</h4>
 <h4 class="date">2025-03-21</h4>
 
@@ -452,126 +452,144 @@ design for a time-to-event endpoint. Analytic calculation is based on
 replicates using <code>TrialSimulator</code>.</p>
 <p>The design is under the following assumptions:</p>
 <ul>
-<li><p>Group sequential with one interim at information fraction 66%
-using an O’Brien-Fleming type <span class="math inline">\(\alpha\)</span>-spending function, one-sided level
-2.5%, and power 80%.</p></li>
-<li><p>Exponential distributed <code>PFS</code> with a median of 60
-months in placebo.</p></li>
-<li><p>Hazard ratio 0.74 between treatment and placebo arms.</p></li>
-<li><p>Dropout rate 2.5% at 12 months in both arms.</p></li>
-<li><p>Linear ramp up recruitment rate until the 6th month at 42
-patients per month.</p></li>
-<li><p>1200 patients are 1:1 randomized into two arms.</p></li>
+<li><p>Group sequential with two interim and one final analysis at
+information fraction 50%, 75% and 100% using an O’Brien-Fleming type
+<span class="math inline">\(\alpha\)</span>-spending function, one-sided
+level 2.5%, and power 90%.</p></li>
+<li><p>In total, 266 patients are 1:1 randomized into two arms. Thus,
+133 and 200 patients at the first and secondar interim.</p></li>
+<li><p>Failure rates are <span class="math inline">\(\pi_1 =
+0.4\)</span> in treatment and <span class="math inline">\(\pi_2 =
+0.6\)</span> in control.</p></li>
+<li><p>No dropout and readout is 0 as
+<code>rpact::getSampleSizeRates</code> does not support these
+settings.</p></li>
+<li><p>Recruitment rate is set for <code>TrialSimulator</code> only as
+<code>rpact::getSampleSizeRates</code> does not evaluate interim
+time.</p></li>
+<li><p>Non-binding futility bounds are 0 and 0.5 for the first and
+second interim on normal approximated z-value. In
+<code>TrialSimulator</code>, we calculate the z-value of <span class="math inline">\(\log\)</span> odds ratio.</p></li>
 </ul>
-<p>This example is discussed in <code>rpact</code> <a href="https://www.rpact.org/vignettes/planning/rpact_survival_simulation_examples/">vignette</a>.</p>
+<p>A similar example is discussed in <code>rpact</code> <a href="https://www.rpact.org/vignettes/planning/rpact_binary_planning_example/">vignette</a>.</p>
 <div id="analytic-calculation-using-rpact" class="section level2">
 <h2>Analytic Calculation Using <code>rpact</code></h2>
-<pre class="r foldable"><code>design &lt;- getDesignGroupSequential(
-    informationRates = c(0.66, 1),
-    typeOfDesign = &quot;asOF&quot;, 
-    sided = 1, 
-    alpha = 0.025, 
-    beta = 1 - 0.8
+<pre class="r foldable"><code>dGS &lt;- getDesignGroupSequential(
+    informationRates = c(0.5, 0.75, 1), alpha = 0.025, beta = 1 - 0.9,
+    futilityBounds = c(0, 0.5)
 )
-
-sampleSizeResult &lt;- getSampleSizeSurvival(
-  design,
-  median2 = 60, 
-  hazardRatio = 0.74,
-  dropoutRate1 = 0.025, 
-  dropoutRate2 = 0.025, 
-  dropoutTime = 12,
-  accrualTime = c(0, 1, 2, 3, 4, 5, 6),
-  accrualIntensity = c(6, 12, 18, 24, 30, 36, 42),
-  maxNumberOfSubjects = 1200
-)
-
-sampleSizeResult |&gt; summary()</code></pre>
-<p><em>Sample size calculation for a survival endpoint</em></p>
-<p>Sequential analysis with a maximum of 2 looks (group sequential
-design), one-sided overall significance level 2.5%, power 80%. The
-results were calculated for a two-sample logrank test, H0: hazard ratio
-= 1, H1: hazard ratio = 0.74, control median(2) = 60, maximum number of
-subjects = 1200, accrual time = c(1, 2, 3, 4, 5, 6, 31.571), accrual
-intensity = c(6, 12, 18, 24, 30, 36, 42), dropout rate(1) = 0.025,
-dropout rate(2) = 0.025, dropout time = 12.</p>
+r &lt;- getSampleSizeRates(dGS, pi1 = 0.4, pi2 = 0.6)
+r |&gt; summary()</code></pre>
+<p><em>Sample size calculation for a binary endpoint</em></p>
+<p>Sequential analysis with a maximum of 3 looks (group sequential
+design), one-sided overall significance level 2.5%, power 90%. The
+results were calculated for a two-sample test for rates (normal
+approximation), H0: pi(1) - pi(2) = 0, H1: pi(1) = 0.4, control rate
+pi(2) = 0.6.</p>
 <table>
 <thead>
 <tr class="header">
 <th>Stage</th>
 <th>1</th>
 <th>2</th>
+<th>3</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Planned information rate</td>
-<td>66%</td>
+<td>50%</td>
+<td>75%</td>
 <td>100%</td>
 </tr>
 <tr class="even">
 <td>Cumulative alpha spent</td>
-<td>0.0058</td>
+<td>0.0021</td>
+<td>0.0105</td>
 <td>0.0250</td>
 </tr>
 <tr class="odd">
 <td>Stage levels (one-sided)</td>
-<td>0.0058</td>
-<td>0.0232</td>
+<td>0.0021</td>
+<td>0.0097</td>
+<td>0.0215</td>
 </tr>
 <tr class="even">
 <td>Efficacy boundary (z-value scale)</td>
-<td>2.524</td>
-<td>1.992</td>
+<td>2.863</td>
+<td>2.337</td>
+<td>2.024</td>
 </tr>
 <tr class="odd">
+<td>Futility boundary (z-value scale)</td>
+<td>0</td>
+<td>0.500</td>
+<td></td>
+</tr>
+<tr class="even">
 <td>Efficacy boundary (t)</td>
-<td>0.718</td>
-<td>0.808</td>
+<td>-0.248</td>
+<td>-0.165</td>
+<td>-0.124</td>
+</tr>
+<tr class="odd">
+<td>Futility boundary (t)</td>
+<td>0.000</td>
+<td>-0.035</td>
+<td></td>
 </tr>
 <tr class="even">
 <td>Cumulative power</td>
-<td>0.4074</td>
-<td>0.8000</td>
+<td>0.2958</td>
+<td>0.6998</td>
+<td>0.9000</td>
 </tr>
 <tr class="odd">
 <td>Number of subjects</td>
-<td>1200.0</td>
-<td>1200.0</td>
+<td>133.1</td>
+<td>199.7</td>
+<td>266.3</td>
 </tr>
 <tr class="even">
 <td>Expected number of subjects under H1</td>
 <td></td>
-<td>1200.0</td>
+<td></td>
+<td>198.3</td>
 </tr>
 <tr class="odd">
-<td>Cumulative number of events</td>
-<td>231.3</td>
-<td>350.5</td>
-</tr>
-<tr class="even">
-<td>Expected number of events under H1</td>
-<td>302.0</td>
+<td>Overall exit probability (under H0)</td>
+<td>0.5021</td>
+<td>0.2275</td>
 <td></td>
 </tr>
-<tr class="odd">
-<td>Analysis time</td>
-<td>39.54</td>
-<td>53.65</td>
-</tr>
 <tr class="even">
-<td>Expected study duration under H1</td>
+<td>Overall exit probability (under H1)</td>
+<td>0.3058</td>
+<td>0.4095</td>
 <td></td>
-<td>47.91</td>
 </tr>
 <tr class="odd">
 <td>Exit probability for efficacy (under H0)</td>
-<td>0.0058</td>
+<td>0.0021</td>
+<td>0.0083</td>
 <td></td>
 </tr>
 <tr class="even">
 <td>Exit probability for efficacy (under H1)</td>
-<td>0.4074</td>
+<td>0.2958</td>
+<td>0.4040</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Exit probability for futility (under H0)</td>
+<td>0.5000</td>
+<td>0.2191</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Exit probability for futility (under H1)</td>
+<td>0.0100</td>
+<td>0.0056</td>
 <td></td>
 </tr>
 </tbody>
@@ -583,51 +601,67 @@ dropout rate(2) = 0.025, dropout time = 12.</p>
 </div>
 <div id="simulation-using-trialsimulator" class="section level2">
 <h2>Simulation Using <code>TrialSimulator</code></h2>
-<pre class="r foldable"><code>tar_load(example1)
+<pre class="r foldable"><code>tar_load(example2)
 
-with(example1, 
+example2 &lt;- example2 %&gt;% 
+  mutate(
+    `Number of enrolled patients` = 
+      case_when(
+        `decision_&lt;interim1&gt;` == &#39;reject&#39; ~ .data[[&#39;n_events_&lt;interim 1&gt;_&lt;patient_id&gt;&#39;]], 
+        `decision_&lt;interim2&gt;` == &#39;reject&#39; ~ .data[[&#39;n_events_&lt;interim 2&gt;_&lt;patient_id&gt;&#39;]], 
+        TRUE ~ .data[[&#39;n_events_&lt;final&gt;_&lt;patient_id&gt;&#39;]]
+      )
+  )
+
+with(example2, 
      data.table(
-       &#39;Interim analysis time&#39; = mean(`event_time_&lt;interim analysis&gt;`), 
-       &#39;Final analysis time&#39; = mean(`event_time_&lt;final analysis&gt;`), 
-       &#39;Power at interim&#39; = mean(`decision_&lt;interim&gt;` == &#39;reject&#39;), 
-       &#39;Overall power&#39; = mean(`decision_&lt;interim&gt;` == &#39;reject&#39; | 
+       &#39;Power at 1st interim&#39; = mean(`decision_&lt;interim1&gt;` == &#39;reject&#39;), 
+       &#39;Power at 2nd interim&#39; = mean(`decision_&lt;interim2&gt;` == &#39;reject&#39;), 
+       &#39;Overall power&#39; = mean(`decision_&lt;interim1&gt;` == &#39;reject&#39; | 
+                                `decision_&lt;interim2&gt;` == &#39;reject&#39; | 
                                 `decision_&lt;final&gt;` == &#39;reject&#39;), 
-       &#39;Expected Number of enrolled patients&#39; = mean(ifelse(`decision_&lt;interim&gt;` == &#39;reject&#39;, 
-                                                            `n_events_&lt;interim analysis&gt;_&lt;patient_id&gt;`,  
-                                                            `n_events_&lt;final analysis&gt;_&lt;patient_id&gt;`)), 
-       &#39;Expected trial duration&#39; = mean(ifelse(`decision_&lt;interim&gt;` == &#39;reject&#39;, 
-                                               `event_time_&lt;interim analysis&gt;`, 
-                                               `event_time_&lt;final analysis&gt;`))
+       &#39;Expected number of enrolled patients&#39; = mean(`Number of enrolled patients`), 
+       &#39;Exit Prob at 1st interim&#39; = mean(`decision_&lt;interim1&gt;` == &#39;reject&#39;),
+       &#39;Exit Prob at 2nd interim&#39; = mean(`decision_&lt;interim1&gt;` == &#39;accept&#39; &amp; 
+                                           `decision_&lt;interim2&gt;` == &#39;reject&#39;), 
+       &#39;Exit Prob at 1st Futility&#39; = mean(`futility_&lt;interim1&gt;`), 
+       &#39;Exit Prob at 2nd Futility&#39; = mean(`futility_&lt;interim2&gt;`)
      ) %&gt;% 
        kable()
 )</code></pre>
-<table>
+<table style="width:100%;">
 <colgroup>
-<col width="16%" />
-<col width="14%" />
-<col width="12%" />
 <col width="10%" />
-<col width="27%" />
-<col width="17%" />
+<col width="10%" />
+<col width="7%" />
+<col width="18%" />
+<col width="12%" />
+<col width="12%" />
+<col width="13%" />
+<col width="13%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th align="right">Interim analysis time</th>
-<th align="right">Final analysis time</th>
-<th align="right">Power at interim</th>
+<th align="right">Power at 1st interim</th>
+<th align="right">Power at 2nd interim</th>
 <th align="right">Overall power</th>
-<th align="right">Expected Number of enrolled patients</th>
-<th align="right">Expected trial duration</th>
+<th align="right">Expected number of enrolled patients</th>
+<th align="right">Exit Prob at 1st interim</th>
+<th align="right">Exit Prob at 2nd interim</th>
+<th align="right">Exit Prob at 1st Futility</th>
+<th align="right">Exit Prob at 2nd Futility</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">40.3961</td>
-<td align="right">55.25672</td>
-<td align="right">0.4073</td>
-<td align="right">0.8023</td>
-<td align="right">1200</td>
-<td align="right">49.1894</td>
+<td align="right">0.2566</td>
+<td align="right">0.6967</td>
+<td align="right">0.9029</td>
+<td align="right">202.8256</td>
+<td align="right">0.2566</td>
+<td align="right">0.4401</td>
+<td align="right">0.0104</td>
+<td align="right">5e-04</td>
 </tr>
 </tbody>
 </table>

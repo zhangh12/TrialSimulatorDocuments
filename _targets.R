@@ -37,4 +37,21 @@ list(
     html1, 
     'docs/example1.Rmd'
   )
+  ,
+  tar_map_rep(
+    name = example2,
+    command = {
+      simulate_example2()
+    },
+    #values = scenarios,
+    batches = n_cores, 
+    reps = n_sims / n_cores,
+    deployment = 'worker'
+  )
+  ,
+  
+  tar_render(
+    html2, 
+    'docs/example2.Rmd'
+  )
 )
