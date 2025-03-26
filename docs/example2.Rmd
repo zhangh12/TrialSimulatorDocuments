@@ -35,19 +35,32 @@ The design is under the following assumptions:
 
 - Recruitment rate is set for `TrialSimulator` only as `rpact::getSampleSizeRates` does not evaluate interim time. 
 
-- Non-binding futility bounds are 0 and 0.5 for the first and second interim on normal approximated z-value. In `TrialSimulator`, we calculate the z-value of $\log$ odds ratio. 
+- Non-binding futility bounds are 0 and 0.5 for the first and second interim on normal approximated z-value. In `TrialSimulator`, we calculate the z-value of the Farrington-Manning test of rate difference. 
 
 A similar example is discussed in `rpact` [vignette](https://www.rpact.org/vignettes/planning/rpact_binary_planning_example/). 
 
 ## Analytic Calculation Using `rpact`
 
 ```{r algnaa}
-dGS <- getDesignGroupSequential(
+design <- getDesignGroupSequential(
     informationRates = c(0.5, 0.75, 1), alpha = 0.025, beta = 1 - 0.9,
-    futilityBounds = c(0, 0.5)
+    futilityBounds = c(0, 0.5), 
+    typeOfDesign = 'asOF'
 )
-r <- getSampleSizeRates(dGS, pi1 = 0.4, pi2 = 0.6)
+r <- getSampleSizeRates(design, pi1 = 0.4, pi2 = 0.6)
 r |> summary()
+```
+
+## Simulation using `rpact`
+
+```{r aoeiega}
+getSimulationRates(
+  design, 
+  pi1 = 0.4, pi2 = 0.6, 
+  plannedSubjects = c(133, 200, 266), 
+  directionUpper = FALSE, 
+  maxNumberOfIterations = 10000
+) |> summary()
 ```
 
 ## Simulation Using `TrialSimulator`

@@ -2,7 +2,7 @@
 
 library(TrialSimulator)
 
-simulate_example2 <- function(){
+simulate_example2 <- function(seed = NULL){
   #' endpoint in control arm
   failure <- Endpoint$new(name = 'failure', type = 'non-tte', 
                           generator = rbinom, size = 1, prob = .6, 
@@ -22,7 +22,7 @@ simulate_example2 <- function(){
   accrual_rate <- data.frame(end_time = c(1, Inf), 
                              piecewise_rate = c(10, 20))
   
-  trial <- Trial$new(name = 'Trial-1234', 
+  trial <- Trial$new(name = 'Trial-1234', seed = seed, 
                      n_patients = 266, duration = 1000, 
                      enroller = StaggeredRecruiter, accrual_rate = accrual_rate, 
                      dropout = NULL)
@@ -33,7 +33,7 @@ simulate_example2 <- function(){
     locked_data <- trial$get_locked_data(event_name)
     
     trial$bind(
-      fitLogistic(endpoint = 'failure', placebo = 'control', 
+      fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
                   data = locked_data, alternative = 'less'), 
       name = 'stats'
     )
@@ -44,7 +44,7 @@ simulate_example2 <- function(){
     locked_data <- trial$get_locked_data(event_name)
     
     trial$bind(
-      fitLogistic(endpoint = 'failure', placebo = 'control', 
+      fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
                   data = locked_data, alternative = 'less'), 
       name = 'stats'
     )
@@ -56,7 +56,7 @@ simulate_example2 <- function(){
     locked_data <- trial$get_locked_data(event_name)
     
     trial$bind(
-      fitLogistic(endpoint = 'failure', placebo = 'control', 
+      fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
                   data = locked_data, alternative = 'less'), 
       name = 'stats'
     )
@@ -64,6 +64,8 @@ simulate_example2 <- function(){
     stats <- trial$get_custom_data('stats')
     trial$save(stats$z[1] > 0, name = 'futility_<interim1>')
     trial$save(stats$z[2] > .5, name = 'futility_<interim2>')
+    
+    browser()
     
     gst <- GroupSequentialTest$new(
       alpha = .025, 
@@ -89,6 +91,7 @@ simulate_example2 <- function(){
     trial$save(ret[1], name = 'decision_<interim1>')
     trial$save(ret[2], name = 'decision_<interim2>')
     trial$save(ret[3], name = 'decision_<final>')
+    
     NULL
     
   }

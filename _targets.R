@@ -8,7 +8,7 @@ n_cores <- future::availableCores()
 
 tar_option_set(
   packages = c('tidyverse', 'ggplot2', 'data.table', 
-               'survival', 
+               'survival', 'rpact', 
                'TrialSimulator'),
   
   # Locally:
