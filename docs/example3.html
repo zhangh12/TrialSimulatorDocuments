@@ -13,7 +13,7 @@
 
 <meta name="date" content="2025-03-26" />
 
-<title>Simulation of Group Sequential Trial with a Binary Endpoint</title>
+<title>Power of Group Sequential Trial with a Time-to-Event Endpoint</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -438,8 +438,8 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Simulation of Group Sequential Trial with a
-Binary Endpoint</h1>
+<h1 class="title toc-ignore">Power of Group Sequential Trial with a
+Time-to-Event Endpoint</h1>
 <h4 class="author">Han Zhang</h4>
 <h4 class="date">2025-03-26</h4>
 
@@ -452,146 +452,162 @@ design for a time-to-event endpoint. Analytic calculation is based on
 replicates using <code>TrialSimulator</code>.</p>
 <p>The design is under the following assumptions:</p>
 <ul>
-<li><p>Group sequential with two interim and one final analysis at
-information fraction 50%, 75% and 100% using an O’Brien-Fleming type
-<span class="math inline">\(\alpha\)</span>-spending function, one-sided
-level 2.5%, and power 90%.</p></li>
-<li><p>In total, 266 patients are 1:1 randomized into two arms. Thus,
-133 and 200 patients at the first and secondar interim.</p></li>
-<li><p>Failure rates are <span class="math inline">\(\pi_1 =
-0.4\)</span> in treatment and <span class="math inline">\(\pi_2 =
-0.6\)</span> in control.</p></li>
-<li><p>No dropout and readout is 0 as
-<code>rpact::getSampleSizeRates</code> does not support these
-settings.</p></li>
-<li><p>Recruitment rate is set for <code>TrialSimulator</code> only as
-<code>rpact::getSampleSizeRates</code> does not evaluate interim
-time.</p></li>
-<li><p>Non-binding futility bounds are 0 and 0.5 for the first and
-second interim on normal approximated z-value. In
-<code>TrialSimulator</code>, we calculate the z-value of the
-Farrington-Manning test of rate difference.</p></li>
+<li><p>Group sequential with three interim at information fraction 60%,
+70% and 80% using an O’Brien-Fleming type <span class="math inline">\(\alpha\)</span>-spending function, one-sided level
+2.5%.</p></li>
+<li><p>Exponential distributed <code>PFS</code> with an event rate 20%
+at 12 months in placebo.</p></li>
+<li><p>Hazard ratio 0.85 between treatment and placebo arms.</p></li>
+<li><p>Dropout rate 10% at 12 months in both arms.</p></li>
+<li><p>Linear ramp up recruitment rate until the 6th month at 42
+patients per month.</p></li>
+<li><p>3000 patients are 1:1 randomized into two arms.</p></li>
+<li><p>Trial is ended when 1000 PFS events are observed.</p></li>
 </ul>
-<p>A similar example is discussed in <code>rpact</code> <a href="https://www.rpact.org/vignettes/planning/rpact_binary_planning_example/">vignette</a>.</p>
 <div id="analytic-calculation-using-rpact" class="section level2">
 <h2>Analytic Calculation Using <code>rpact</code></h2>
 <pre class="r foldable"><code>design &lt;- getDesignGroupSequential(
-    informationRates = c(0.5, 0.75, 1), alpha = 0.025, beta = 1 - 0.9,
-    futilityBounds = c(0, 0.5), 
-    typeOfDesign = &#39;asOF&#39;
+  informationRates = c(.6, .7, .8, 1.0),
+  typeOfDesign = &#39;asOF&#39;, 
+  alpha = .025, 
+  sided = 1
 )
-r &lt;- getSampleSizeRates(design, pi1 = 0.4, pi2 = 0.6)
-r |&gt; summary()</code></pre>
-<p><em>Sample size calculation for a binary endpoint</em></p>
-<p>Sequential analysis with a maximum of 3 looks (group sequential
-design), one-sided overall significance level 2.5%, power 90%. The
-results were calculated for a two-sample test for rates (normal
-approximation), H0: pi(1) - pi(2) = 0, H1: pi(1) = 0.4, control rate
-pi(2) = 0.6.</p>
+
+getPowerSurvival(
+  design, 
+  thetaH0 = 1.0, 
+  pi2 = .2, 
+  eventTime = 12, 
+  directionUpper = FALSE,
+  hazardRatio = .85, 
+  dropoutRate1 = .1, 
+  dropoutRate2 = .1, 
+  dropoutTime = 12, 
+  maxNumberOfSubjects = 3000, 
+  maxNumberOfEvents = 1000 
+) |&gt; summary()</code></pre>
+<p><em>Power calculation for a survival endpoint</em></p>
+<p>Sequential analysis with a maximum of 4 looks (group sequential
+design), one-sided overall significance level 2.5%. The results were
+calculated for a two-sample logrank test, H0: hazard ratio = 1, power
+directed towards smaller values, H1: hazard ratio = 0.85, control pi(2)
+= 0.2, maximum number of subjects = 3000, maximum number of events =
+1000, event time = 12, accrual time = 12, accrual intensity = 250,
+dropout rate(1) = 0.1, dropout rate(2) = 0.1, dropout time = 12.</p>
 <table>
+<colgroup>
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+</colgroup>
 <thead>
 <tr class="header">
 <th>Stage</th>
 <th>1</th>
 <th>2</th>
 <th>3</th>
+<th>4</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td>Planned information rate</td>
-<td>50%</td>
-<td>75%</td>
+<td>60%</td>
+<td>70%</td>
+<td>80%</td>
 <td>100%</td>
 </tr>
 <tr class="even">
 <td>Cumulative alpha spent</td>
-<td>0.0015</td>
-<td>0.0096</td>
+<td>0.0038</td>
+<td>0.0074</td>
+<td>0.0122</td>
 <td>0.0250</td>
 </tr>
 <tr class="odd">
 <td>Stage levels (one-sided)</td>
-<td>0.0015</td>
-<td>0.0092</td>
-<td>0.0220</td>
+<td>0.0038</td>
+<td>0.0063</td>
+<td>0.0098</td>
+<td>0.0209</td>
 </tr>
 <tr class="even">
 <td>Efficacy boundary (z-value scale)</td>
-<td>2.963</td>
-<td>2.359</td>
-<td>2.014</td>
+<td>2.669</td>
+<td>2.497</td>
+<td>2.333</td>
+<td>2.035</td>
 </tr>
 <tr class="odd">
-<td>Futility boundary (z-value scale)</td>
-<td>0</td>
-<td>0.500</td>
-<td></td>
-</tr>
-<tr class="even">
 <td>Efficacy boundary (t)</td>
-<td>-0.257</td>
-<td>-0.167</td>
-<td>-0.123</td>
-</tr>
-<tr class="odd">
-<td>Futility boundary (t)</td>
-<td>0.000</td>
-<td>-0.035</td>
-<td></td>
+<td>0.804</td>
+<td>0.828</td>
+<td>0.848</td>
+<td>0.879</td>
 </tr>
 <tr class="even">
 <td>Cumulative power</td>
-<td>0.2609</td>
-<td>0.6892</td>
-<td>0.9000</td>
+<td>0.2488</td>
+<td>0.3791</td>
+<td>0.5068</td>
+<td>0.7172</td>
 </tr>
 <tr class="odd">
 <td>Number of subjects</td>
-<td>132.7</td>
-<td>199.0</td>
-<td>265.3</td>
+<td>3000.0</td>
+<td>3000.0</td>
+<td>3000.0</td>
+<td>3000.0</td>
 </tr>
 <tr class="even">
 <td>Expected number of subjects under H1</td>
 <td></td>
 <td></td>
-<td>200.6</td>
+<td></td>
+<td>3000.0</td>
 </tr>
 <tr class="odd">
-<td>Overall exit probability (under H0)</td>
-<td>0.5015</td>
-<td>0.2272</td>
-<td></td>
+<td>Cumulative number of events</td>
+<td>600.0</td>
+<td>700.0</td>
+<td>800.0</td>
+<td>1000.0</td>
 </tr>
 <tr class="even">
-<td>Overall exit probability (under H1)</td>
-<td>0.2710</td>
-<td>0.4339</td>
+<td>Expected number of events under H1</td>
 <td></td>
+<td></td>
+<td></td>
+<td>835.8</td>
+</tr>
+<tr class="odd">
+<td>Analysis time</td>
+<td>20.01</td>
+<td>22.90</td>
+<td>26.02</td>
+<td>33.15</td>
+</tr>
+<tr class="even">
+<td>Expected study duration under H1</td>
+<td></td>
+<td></td>
+<td></td>
+<td>27.63</td>
 </tr>
 <tr class="odd">
 <td>Exit probability for efficacy (under H0)</td>
-<td>0.0015</td>
-<td>0.0081</td>
+<td>0.0038</td>
+<td>0.0036</td>
+<td>0.0048</td>
 <td></td>
 </tr>
 <tr class="even">
 <td>Exit probability for efficacy (under H1)</td>
-<td>0.2609</td>
-<td>0.4283</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Exit probability for futility (under H0)</td>
-<td>0.5000</td>
-<td>0.2191</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Exit probability for futility (under H1)</td>
-<td>0.0101</td>
-<td>0.0056</td>
+<td>0.2488</td>
+<td>0.1303</td>
+<td>0.1278</td>
 <td></td>
 </tr>
 </tbody>
@@ -601,165 +617,54 @@ pi(2) = 0.6.</p>
 <li><em>(t)</em>: treatment effect scale</li>
 </ul>
 </div>
-<div id="simulation-using-rpact" class="section level2">
-<h2>Simulation using <code>rpact</code></h2>
-<pre class="r foldable"><code>getSimulationRates(
-  design, 
-  pi1 = 0.4, pi2 = 0.6, 
-  plannedSubjects = c(133, 200, 266), 
-  directionUpper = FALSE, 
-  maxNumberOfIterations = 10000
-) |&gt; summary()</code></pre>
-<p><em>Simulation of a binary endpoint</em></p>
-<p>Sequential analysis with a maximum of 3 looks (group sequential
-design), one-sided overall significance level 2.5%. The results were
-simulated for a two-sample test for rates (normal approximation), H0:
-pi(1) - pi(2) = 0, power directed towards smaller values, H1: pi(1) =
-0.4, control rate pi(2) = 0.6, planned cumulative sample size = c(133,
-200, 266), simulation runs = 10000, seed = -1878391328.</p>
-<table>
-<thead>
-<tr class="header">
-<th>Stage</th>
-<th>1</th>
-<th>2</th>
-<th>3</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Planned information rate</td>
-<td>50%</td>
-<td>75%</td>
-<td>100%</td>
-</tr>
-<tr class="even">
-<td>Cumulative alpha spent</td>
-<td>0.0015</td>
-<td>0.0096</td>
-<td>0.0250</td>
-</tr>
-<tr class="odd">
-<td>Stage levels (one-sided)</td>
-<td>0.0015</td>
-<td>0.0092</td>
-<td>0.0220</td>
-</tr>
-<tr class="even">
-<td>Efficacy boundary (z-value scale)</td>
-<td>2.963</td>
-<td>2.359</td>
-<td>2.014</td>
-</tr>
-<tr class="odd">
-<td>Futility boundary (z-value scale)</td>
-<td>0</td>
-<td>0.500</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Cumulative power</td>
-<td>0.2597</td>
-<td>0.7032</td>
-<td>0.9016</td>
-</tr>
-<tr class="odd">
-<td>Stage-wise number of subjects</td>
-<td>133.0</td>
-<td>67.0</td>
-<td>66.0</td>
-</tr>
-<tr class="even">
-<td>Expected number of subjects under H1</td>
-<td></td>
-<td></td>
-<td>200.8</td>
-</tr>
-<tr class="odd">
-<td>Conditional power (achieved)</td>
-<td></td>
-<td>0.5282</td>
-<td>0.5297</td>
-</tr>
-<tr class="even">
-<td>Exit probability for efficacy</td>
-<td>0.2597</td>
-<td>0.4435</td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Exit probability for futility</td>
-<td>0.0079</td>
-<td>0.0053</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</div>
 <div id="simulation-using-trialsimulator" class="section level2">
 <h2>Simulation Using <code>TrialSimulator</code></h2>
-<pre class="r foldable"><code>tar_load(example2)
+<pre class="r foldable"><code>tar_load(example3)
 
-example2 &lt;- example2 %&gt;%
-  head(10000) %&gt;% 
-  mutate(
-    `Number of enrolled patients` = 
-      case_when(
-        `decision_&lt;interim1&gt;` == &#39;reject&#39; ~ .data[[&#39;n_events_&lt;interim 1&gt;_&lt;patient_id&gt;&#39;]], 
-        `decision_&lt;interim2&gt;` == &#39;reject&#39; ~ .data[[&#39;n_events_&lt;interim 2&gt;_&lt;patient_id&gt;&#39;]], 
-        TRUE ~ .data[[&#39;n_events_&lt;final&gt;_&lt;patient_id&gt;&#39;]]
-      )
-  )
-
-with(example2, 
+with(example3 %&gt;% head(10000), 
      data.table(
-       &#39;Power at 1st interim&#39; = mean(`decision_&lt;interim1&gt;` == &#39;reject&#39;), 
-       &#39;Power at 2nd interim&#39; = mean(`decision_&lt;interim2&gt;` == &#39;reject&#39;), 
-       &#39;Overall power&#39; = mean(`decision_&lt;interim1&gt;` == &#39;reject&#39; | 
-                                `decision_&lt;interim2&gt;` == &#39;reject&#39; | 
-                                `decision_&lt;final&gt;` == &#39;reject&#39;), 
-       &#39;Expected number of enrolled patients&#39; = mean(`Number of enrolled patients`), 
-       &#39;Exit Prob at 1st interim&#39; = mean(`decision_&lt;interim1&gt;` == &#39;reject&#39;),
-       &#39;Exit Prob at 2nd interim&#39; = mean(`decision_&lt;interim1&gt;` == &#39;accept&#39; &amp; 
-                                           `decision_&lt;interim2&gt;` == &#39;reject&#39;), 
-       &#39;Exit Prob at 1st Futility&#39; = mean(`futility_&lt;interim1&gt;`), 
-       &#39;Exit Prob at 2nd Futility&#39; = mean(`futility_&lt;interim2&gt;`)
+       #&#39;1st interim analysis time&#39; = mean(`event_time_&lt;interim 1&gt;`), 
+       #&#39;2nd interim analysis time&#39; = mean(`event_time_&lt;interim 2&gt;`), 
+       #&#39;3rd interim analysis time&#39; = mean(`event_time_&lt;interim 3&gt;`), 
+       #&#39;Final analysis time&#39; = mean(`event_time_&lt;final&gt;`), 
+       &#39;Power at 1st interim&#39; = mean(`decision1` == &#39;reject&#39;), 
+       &#39;Power at 2nd interim&#39; = mean(`decision2` == &#39;reject&#39;), 
+       &#39;Power at 3rd interim&#39; = mean(`decision3` == &#39;reject&#39;), 
+       &#39;Power at final&#39; = mean(`decision4` == &#39;reject&#39;),
+       &#39;Expected Number of PFS events&#39; = mean(ifelse(`decision1` == &#39;reject&#39;, 
+                                                            `n_events_&lt;interim 1&gt;_&lt;pfs&gt;`,  
+                                                            ifelse(`decision2` == &#39;reject&#39;, 
+                                                                   `n_events_&lt;interim 2&gt;_&lt;pfs&gt;`, 
+                                                                   ifelse(`decision3` == &#39;reject&#39;, 
+                                                                          `n_events_&lt;interim 3&gt;_&lt;pfs&gt;`, 
+                                                                          `n_events_&lt;final&gt;_&lt;pfs&gt;`))))
      ) %&gt;% 
        kable()
 )</code></pre>
-<table style="width:100%;">
+<table>
 <colgroup>
-<col width="10%" />
-<col width="10%" />
-<col width="7%" />
-<col width="18%" />
-<col width="12%" />
-<col width="12%" />
+<col width="19%" />
+<col width="19%" />
+<col width="19%" />
 <col width="13%" />
-<col width="13%" />
+<col width="27%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th align="right">Power at 1st interim</th>
 <th align="right">Power at 2nd interim</th>
-<th align="right">Overall power</th>
-<th align="right">Expected number of enrolled patients</th>
-<th align="right">Exit Prob at 1st interim</th>
-<th align="right">Exit Prob at 2nd interim</th>
-<th align="right">Exit Prob at 1st Futility</th>
-<th align="right">Exit Prob at 2nd Futility</th>
+<th align="right">Power at 3rd interim</th>
+<th align="right">Power at final</th>
+<th align="right">Expected Number of PFS events</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.2611</td>
-<td align="right">0.6986</td>
-<td align="right">0.9014</td>
-<td align="right">202.3987</td>
-<td align="right">0.2611</td>
-<td align="right">0.4375</td>
-<td align="right">0.0106</td>
-<td align="right">2e-04</td>
+<td align="right">0.2402</td>
+<td align="right">0.3706</td>
+<td align="right">0.5037</td>
+<td align="right">0.7165</td>
+<td align="right">838.18</td>
 </tr>
 </tbody>
 </table>

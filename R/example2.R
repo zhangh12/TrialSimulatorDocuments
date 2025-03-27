@@ -2,7 +2,7 @@
 
 library(TrialSimulator)
 
-simulate_example2 <- function(seed = NULL){
+simulate_example2 <- function(n = 1, seed = NULL){
   #' endpoint in control arm
   failure <- Endpoint$new(name = 'failure', type = 'non-tte', 
                           generator = rbinom, size = 1, prob = .6, 
@@ -65,8 +65,6 @@ simulate_example2 <- function(seed = NULL){
     trial$save(stats$z[1] > 0, name = 'futility_<interim1>')
     trial$save(stats$z[2] > .5, name = 'futility_<interim2>')
     
-    browser()
-    
     gst <- GroupSequentialTest$new(
       alpha = .025, 
       alpha_spending = 'asOF', 
@@ -112,9 +110,9 @@ simulate_example2 <- function(seed = NULL){
   listener$add_events(interim1, interim2, final)
   
   controller <- Controller$new(trial, listener)
-  controller$run(plot_event = FALSE)
+  controller$run(n = n, plot_event = FALSE, silent = TRUE)
   
-  trial$get_output()
+  controller$get_output()
   
 }
 

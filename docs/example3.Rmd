@@ -1,0 +1,95 @@
+---
+title: "Power of Group Sequential Trial with a Time-to-Event Endpoint"
+author: "Han Zhang"
+date: "`r Sys.Date()`"
+output: 
+  html_document: 
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(class.source = "foldable")
+```
+
+```{r aljai, message=FALSE, echo=FALSE}
+library(targets)
+library(rpact)
+library(TrialSimulator)
+library(data.table)
+library(kableExtra)
+library(tidyverse)
+```
+
+This document replicates simulation result of a group sequential design for a time-to-event endpoint. Analytic calculation is based on `rpact::getPowerSurvival`, and simulation is based on 10,000 replicates using `TrialSimulator`. 
+
+The design is under the following assumptions: 
+
+- Group sequential with three interim at information fraction 60%, 70% and 80% using an O'Brien-Fleming type $\alpha$-spending function, one-sided level 2.5%. 
+
+- Exponential distributed `PFS` with an event rate 20% at 12 months in placebo. 
+
+- Hazard ratio 0.85 between treatment and placebo arms. 
+
+- Dropout rate 10% at 12 months in both arms. 
+
+- Linear ramp up recruitment rate until the 6th month at 42 patients per month. 
+
+- 3000 patients are 1:1 randomized into two arms. 
+
+- Trial is ended when 1000 PFS events are observed. 
+
+## Analytic Calculation Using `rpact`
+
+```{r algna}
+
+design <- getDesignGroupSequential(
+  informationRates = c(.6, .7, .8, 1.0),
+  typeOfDesign = 'asOF', 
+  alpha = .025, 
+  sided = 1
+)
+
+getPowerSurvival(
+  design, 
+  thetaH0 = 1.0, 
+  pi2 = .2, 
+  eventTime = 12, 
+  directionUpper = FALSE,
+  hazardRatio = .85, 
+  dropoutRate1 = .1, 
+  dropoutRate2 = .1, 
+  dropoutTime = 12, 
+  maxNumberOfSubjects = 3000, 
+  maxNumberOfEvents = 1000 
+) |> summary()
+```
+
+## Simulation Using `TrialSimulator`
+
+```{r laeig}
+tar_load(example3)
+
+with(example3 %>% head(10000), 
+     data.table(
+       #'1st interim analysis time' = mean(`event_time_<interim 1>`), 
+       #'2nd interim analysis time' = mean(`event_time_<interim 2>`), 
+       #'3rd interim analysis time' = mean(`event_time_<interim 3>`), 
+       #'Final analysis time' = mean(`event_time_<final>`), 
+       'Power at 1st interim' = mean(`decision1` == 'reject'), 
+       'Power at 2nd interim' = mean(`decision2` == 'reject'), 
+       'Power at 3rd interim' = mean(`decision3` == 'reject'), 
+       'Power at final' = mean(`decision4` == 'reject'),
+       'Expected Number of PFS events' = mean(ifelse(`decision1` == 'reject', 
+                                                            `n_events_<interim 1>_<pfs>`,  
+                                                            ifelse(`decision2` == 'reject', 
+                                                                   `n_events_<interim 2>_<pfs>`, 
+                                                                   ifelse(`decision3` == 'reject', 
+                                                                          `n_events_<interim 3>_<pfs>`, 
+                                                                          `n_events_<final>_<pfs>`))))
+     ) %>% 
+       kable()
+)
+
+```
+

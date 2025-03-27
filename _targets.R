@@ -18,13 +18,13 @@ tar_option_set(
 tar_source()
 
 # n_sims <- n_cores * 10
-n_sims <- 10000
+n_sims <- 120
 
 list(
   tar_map_rep(
     name = example1,
     command = {
-      simulate_example1()
+      simulate_example1(n = 100)
     },
     #values = scenarios,
     batches = n_cores, 
@@ -41,7 +41,7 @@ list(
   tar_map_rep(
     name = example2,
     command = {
-      simulate_example2()
+      simulate_example2(n = 100)
     },
     #values = scenarios,
     batches = n_cores, 
@@ -53,5 +53,23 @@ list(
   tar_render(
     html2, 
     'docs/example2.Rmd'
+  )
+  ,
+  
+  tar_map_rep(
+    name = example3,
+    command = {
+      simulate_example3(n = 1)
+    },
+    #values = scenarios,
+    batches = n_cores, 
+    reps = 10000 / n_cores,
+    deployment = 'worker'
+  )
+  ,
+  
+  tar_render(
+    html3, 
+    'docs/example3.Rmd'
   )
 )

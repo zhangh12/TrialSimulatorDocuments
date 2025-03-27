@@ -70,7 +70,7 @@ sampleSizeResult |> summary()
 ```{r laeig}
 tar_load(example1)
 
-with(example1, 
+with(example1 %>% head(10000), 
      data.table(
        'Interim analysis time' = mean(`event_time_<interim analysis>`), 
        'Final analysis time' = mean(`event_time_<final analysis>`), 

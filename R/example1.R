@@ -3,7 +3,7 @@
 
 library(TrialSimulator)
 
-simulate_example1 <- function(){
+simulate_example1 <- function(n = 1, seed = NULL){
   #' median PFS: 60 months in control
   pfs <- Endpoint$new(name = 'pfs', type = 'tte', 
                       generator = rexp, rate = log(2) / 60)
@@ -91,9 +91,9 @@ simulate_example1 <- function(){
   listener$add_events(interim, final)
   
   controller <- Controller$new(trial, listener)
-  controller$run(plot_event = FALSE)
+  controller$run(n = n, plot_event = FALSE, silent = TRUE)
   
-  trial$get_output()
+  controller$get_output()
   
 }
 

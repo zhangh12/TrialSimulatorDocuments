@@ -68,7 +68,8 @@ getSimulationRates(
 ```{r laeig}
 tar_load(example2)
 
-example2 <- example2 %>% 
+example2 <- example2 %>%
+  head(10000) %>% 
   mutate(
     `Number of enrolled patients` = 
       case_when(
