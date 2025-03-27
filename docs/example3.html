@@ -11,7 +11,7 @@
 
 <meta name="author" content="Han Zhang" />
 
-<meta name="date" content="2025-03-26" />
+<meta name="date" content="2025-03-27" />
 
 <title>Power of Group Sequential Trial with a Time-to-Event Endpoint</title>
 
@@ -441,7 +441,7 @@ display: none;
 <h1 class="title toc-ignore">Power of Group Sequential Trial with a
 Time-to-Event Endpoint</h1>
 <h4 class="author">Han Zhang</h4>
-<h4 class="date">2025-03-26</h4>
+<h4 class="date">2025-03-27</h4>
 
 </div>
 
@@ -623,10 +623,10 @@ dropout rate(1) = 0.1, dropout rate(2) = 0.1, dropout time = 12.</p>
 
 with(example3 %&gt;% head(10000), 
      data.table(
-       #&#39;1st interim analysis time&#39; = mean(`event_time_&lt;interim 1&gt;`), 
-       #&#39;2nd interim analysis time&#39; = mean(`event_time_&lt;interim 2&gt;`), 
-       #&#39;3rd interim analysis time&#39; = mean(`event_time_&lt;interim 3&gt;`), 
-       #&#39;Final analysis time&#39; = mean(`event_time_&lt;final&gt;`), 
+       &#39;1st interim analysis time&#39; = mean(`event_time_&lt;interim 1&gt;`), 
+       &#39;2nd interim analysis time&#39; = mean(`event_time_&lt;interim 2&gt;`), 
+       &#39;3rd interim analysis time&#39; = mean(`event_time_&lt;interim 3&gt;`), 
+       &#39;Final analysis time&#39; = mean(`event_time_&lt;final&gt;`), 
        &#39;Power at 1st interim&#39; = mean(`decision1` == &#39;reject&#39;), 
        &#39;Power at 2nd interim&#39; = mean(`decision2` == &#39;reject&#39;), 
        &#39;Power at 3rd interim&#39; = mean(`decision3` == &#39;reject&#39;), 
@@ -641,16 +641,24 @@ with(example3 %&gt;% head(10000),
      ) %&gt;% 
        kable()
 )</code></pre>
-<table>
+<table style="width:100%;">
 <colgroup>
-<col width="19%" />
-<col width="19%" />
-<col width="19%" />
-<col width="13%" />
-<col width="27%" />
+<col width="12%" />
+<col width="12%" />
+<col width="12%" />
+<col width="9%" />
+<col width="10%" />
+<col width="10%" />
+<col width="10%" />
+<col width="7%" />
+<col width="14%" />
 </colgroup>
 <thead>
 <tr class="header">
+<th align="right">1st interim analysis time</th>
+<th align="right">2nd interim analysis time</th>
+<th align="right">3rd interim analysis time</th>
+<th align="right">Final analysis time</th>
 <th align="right">Power at 1st interim</th>
 <th align="right">Power at 2nd interim</th>
 <th align="right">Power at 3rd interim</th>
@@ -660,11 +668,15 @@ with(example3 %&gt;% head(10000),
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">0.2402</td>
-<td align="right">0.3706</td>
-<td align="right">0.5037</td>
-<td align="right">0.7165</td>
-<td align="right">838.18</td>
+<td align="right">20.81298</td>
+<td align="right">23.93941</td>
+<td align="right">27.34002</td>
+<td align="right">35.20424</td>
+<td align="right">0.2418</td>
+<td align="right">0.3722</td>
+<td align="right">0.5026</td>
+<td align="right">0.7161</td>
+<td align="right">838.08</td>
 </tr>
 </tbody>
 </table>

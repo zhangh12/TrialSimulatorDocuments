@@ -15,7 +15,7 @@ simulate_example3 <- function(n = 1, seed = NULL){
   
   trial <- Trial$new(name = 'trial', n_patients = 3000, duration = 100, 
                      enroller = StaggeredRecruiter, 
-                     accrual_rate = data.frame(end_time = c(10, Inf), piecewise_rate = c(50, 100)), 
+                     accrual_rate = data.frame(end_time = c(12, Inf), piecewise_rate = c(250, 250)), 
                      dropout = rexp, rate = -log(1-.1)/12)
   
   trial$add_arms(sample_ratio = c(1, 1), trt, pbo)

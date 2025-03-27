@@ -72,10 +72,10 @@ tar_load(example3)
 
 with(example3 %>% head(10000), 
      data.table(
-       #'1st interim analysis time' = mean(`event_time_<interim 1>`), 
-       #'2nd interim analysis time' = mean(`event_time_<interim 2>`), 
-       #'3rd interim analysis time' = mean(`event_time_<interim 3>`), 
-       #'Final analysis time' = mean(`event_time_<final>`), 
+       '1st interim analysis time' = mean(`event_time_<interim 1>`), 
+       '2nd interim analysis time' = mean(`event_time_<interim 2>`), 
+       '3rd interim analysis time' = mean(`event_time_<interim 3>`), 
+       'Final analysis time' = mean(`event_time_<final>`), 
        'Power at 1st interim' = mean(`decision1` == 'reject'), 
        'Power at 2nd interim' = mean(`decision2` == 'reject'), 
        'Power at 3rd interim' = mean(`decision3` == 'reject'), 
