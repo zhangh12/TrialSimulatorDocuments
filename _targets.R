@@ -72,4 +72,10 @@ list(
     html3, 
     'docs/example3.Rmd'
   )
+  ,
+  
+  tar_render(
+    html_comparison_graphicalMCP, 
+    'docs/comparison_graphicalMCP.Rmd'
+  )
 )

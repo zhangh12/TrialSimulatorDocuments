@@ -31,10 +31,15 @@ example3_d2acedd23f2ec0f9|branch|e2e7beeb064fa8ff|e5d267ad8a7185ce|41b1fd618006c
 example3_53e13bfd73b9d7d4|branch|2d8934e85b0f93ac|e5d267ad8a7185ce|41b1fd618006cc6d|124086974||t20174.5808613923s|s53473b|53473|rds|local|vector|example3||2747.082||
 example3_44496d5159369837|branch|61f0b7bde055a89f|e5d267ad8a7185ce|41b1fd618006cc6d|-1082637197||t20174.5808762546s|s53485b|53485|rds|local|vector|example3||2748.208||
 example3|pattern|59705b3077edb5a4|e5d267ad8a7185ce||702426655||||427920|rds|local|vector||example3_717f1533e5b2eeed*example3_d2acedd23f2ec0f9*example3_ca6c15ebd91f216c*example3_8ee00065dab7f74b*example3_385f6ac62f07df58*example3_44496d5159369837*example3_53e13bfd73b9d7d4*example3_ad38541d5eb43ec8|21927.855||
+html3|stem|17704e52dbe03df2|15204f84810c17b9|6efcec9576918460|-1765607150|docs/example3.html*docs/example3.Rmd|t20174.5848447996s|s636443b|636443|file|local|vector|||1.534||
+obj_a_1|stem|361087522af5aa07|283bbb5a254c0461|2c530c1562a7fbd1|1984870514||t20175.6702079233s|s51b|51|rds|local|vector|||0.443||
+obj_b_2|stem|f3e9e515849c3c8f|9dff2fae4fd182c1|2c530c1562a7fbd1|1855309625||t20175.6710949836s|s51b|51|rds|local|vector|||0.548||
+obj|stem|3c99c4cebbc72de4|043de6019a0176fe|f56f2348c6931729|323397805||t20175.6741498062s|s95b|95|rds|local|vector|||0.001||
+tmp|stem|f3e9e515849c3c8f|6beb8b6becf5daa2|21242c098f4065d2|-1002410510||t20175.6743775211s|s51b|51|rds|local|vector|||0||
+html_comparison_graphicalMCP|stem|57b9e28f41142087|ab7d2176443c6f5d|2c530c1562a7fbd1|-1763916755|docs/comparison_graphicalMCP.html*docs/comparison_graphicalMCP.Rmd|t20175.6818808196s|s632556b|632556|file|local|vector|||125.339||
 simulate_example1|function|6437e56f0f53622c
 simulate_example2|function|94f318e2f3b36f32
 simulate_example3|function|3feeb7e69987e3d7
-.Random.seed|object|b4c8416426b0d7c5
+.Random.seed|object|32b6b0920e23f61c
 n_cores|object|a3334f158ed3ccb5
 n_sims|object|b7d4d37884c593be
-html3|stem|17704e52dbe03df2|15204f84810c17b9|6efcec9576918460|-1765607150|docs/example3.html*docs/example3.Rmd|t20174.5848447996s|s636443b|636443|file|local|vector|||1.534||
