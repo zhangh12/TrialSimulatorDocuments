@@ -97,10 +97,21 @@ action2 <- function(trial, event_name){
 action3 <- function(trial, event_name){
   locked_data <- trial$get_locked_data(event_name)
   
+  ## extend duration of a trial
+  ## calculate if duration should be extended or not
+  trial$set_duration(duration = 45)
+  
+  invisible(NULL)
+  
+}
+
+action4 <- function(trial, event_name){
+  locked_data <- trial$get_locked_data(event_name)
+  
   ## test PFS
   dt_pfs <- trial$dunnettTest(endpoint = 'pfs', placebo = 'placebo',
                               treatments = c('high dose', 'low dose'),
-                              events = c('dose selection', 'interim', 'final'),
+                              events = c('dose selection', 'duration', 'interim', 'final'),
                               planned_info = 'default')
   ct_pfs <- trial$closedTest(dt_pfs, treatments = c('high dose', 'low dose'),
                              events = c('interim', 'final'),
@@ -109,7 +120,7 @@ action3 <- function(trial, event_name){
   ## test OS
   dt_os <- trial$dunnettTest(endpoint = 'os', placebo = 'placebo',
                              treatments = c('high dose', 'low dose'),
-                             events = c('dose selection', 'final'),
+                             events = c('dose selection', 'duration', 'final'),
                              planned_info = 'default')
   ct_os <- trial$closedTest(dt_pfs, treatments = c('high dose', 'low dose'),
                             events = c('final'),
@@ -139,7 +150,11 @@ interim <- Event$new(name = 'interim', action = action2,
                      trigger_condition = eventNumber(endpoint = 'pfs',
                                                      n = 300))
 
-final <- Event$new(name = 'final', action = action3,
+duration <- Event$new(name = 'interim', action = action3,
+                     trigger_condition = eventNumber(endpoint = 'pfs',
+                                                     n = 400))
+
+final <- Event$new(name = 'final', action = action4,
                    trigger_condition =
                      enrollment(n = 1000, arms = c('placebo', 'low dose', 'high dose')) &
                      eventNumber(endpoint = 'os', n = 300) & (
@@ -153,6 +168,7 @@ listener <- Listener$new()
 listener$add_events(
   dose_selection,
   interim,
+  duration,
   final
 )
 
