@@ -87,6 +87,9 @@ action2 <- function(trial, event_name){
     trial$save(value = 'positive', name = 'futility')
   }
   
+  ## extend duration of a trial
+  trial$set_duration(duration = 45)
+  
   invisible(NULL)
   
 }
