@@ -1,0 +1,250 @@
+---
+title: "Template for Base Case with Futility"
+format: html
+editor: visual
+---
+
+## Design
+
+We consider a randomized phase III study.
+
+-   Start with one placebo arm and a dose arm, with a 2:1 randomization ratio.
+-   Planned trial duration is up to 40 months.
+-   Randomize 50 patients per month for the first 6 months, then 65 patients per month until 650 patients are recruited.
+-   Dropout rate is 5% at month 12 and 12% at month 24.
+-   Two time-to-event endpoints `PFS` and `OS`.
+    -   Medians of `PFS` in placebo and treated arms are 8.3 and 11.5 months, approximately a hazard ratio 0.72
+    -   Medians of `OS` in placebo and treated arms are 14.5 and 19.3 months, approximately a hazard ratio 0.75
+-   `PFS` and `OS` are both tested with one-sided `logrank` test, with the overall family-wise error rate controlled at $\alpha = 0.025$ under a graphical testing procedure.
+    -   $\alpha$ is split between `PFS` (0.01) and `OS` (0.015).
+-   A group sequential design is adopted
+    -   Interim analysis is performed for `PFS` only when 250 `PFS` events are observed.
+    -   A futility analysis is performed on `PFS` with a boundary 0.5 of `logrank` statistics.
+    -   Final analysis is performed for both endpoints when all planned patients are randomized and at least 400 `OS` events are observed. However, if the target number of `OS` events cannot be reached, the final analysis is performed at month 40.
+    -   For `PFS`, Lan & DeMets $\alpha$-spending is used as an approximation to the O’Brien & Fleming boundaries.
+
+## Implementation
+
+### Loading relevant packages
+
+```{r}
+#| output: false
+library(dplyr)
+library(TrialSimulator)
+library(kableExtra)
+set.seed(12345)
+```
+
+### Helper functions
+
+In this section, we define helper functions that are task-specific. For example, statistician may simulate correlated `PFS` and `OS` in various ways. For the purpose of illustration, we simulate independent endpoints, i.e. `corr` is currently a dummy argument.
+
+```{r}
+#' Simulate correlated PFS and OS. Marginally, both endpoints follow exponential distribution. 
+#' @param n integer. Number of samples. 
+#' @param median_pfs numeric. Median of PFS in an arm. 
+#' @param median_os numeric. Median of OS in an arm. 
+#' @param corr numeric. Parameter of correlation between PFS and OS. 
+correlated_pfs_os <- function(n, median_pfs, median_os, corr = .0){
+  pfs <- rexp(n, rate = log(2) / median_pfs)
+  os <- rexp(n, rate = log(2) / median_os)
+  
+  data.frame(pfs = pfs, os = os, pfs_event = 1, os_event = 1)
+}
+```
+
+### Define Endpoints and Arms
+
+::: panel-tabset
+## Placebo
+
+```{r}
+pfs_and_os_in_pbo <- endpoint(name = c('pfs', 'os'), type = c('tte', 'tte'), 
+                              generator = correlated_pfs_os, 
+                              median_pfs = 8.3, median_os = 14.5)
+pbo <- arm(name = 'placebo')
+pbo$add_endpoints(pfs_and_os_in_pbo)
+```
+
+## Treated
+
+```{r}
+pfs_and_os_in_trt <- endpoint(name = c('pfs', 'os'), type = c('tte', 'tte'), 
+                              generator = correlated_pfs_os, 
+                              median_pfs = 11.5, median_os = 19.3)
+trt <- arm(name = 'treated')
+trt$add_endpoints(pfs_and_os_in_trt)
+```
+:::
+
+### Define A Trial
+
+We use the Weibull distribution to model dropout. The `TrialSimulator` package provides a helper function to compute the shape and scale parameters of the Weibull distribution.
+
+```{r}
+weibullDropout(time = c(12, 24), dropout_rate = c(.05, .12))
+```
+
+To define arms and a trial, we can
+
+```{r}
+#| output: false
+accrual_rate <- data.frame(end_time = c(6, Inf), 
+                           piecewise_rate = c(50, 65))
+
+trial <- trial(
+  name = 'trial-123', n_patients = 650, duration = 40, 
+  enroller = StaggeredRecruiter, accrual_rate = accrual_rate, 
+  dropout = rweibull, shape = 1.32, scale = 114.4
+)
+
+trial$add_arms(sample_ratio = c(1, 2), pbo, trt)
+```
+
+### Define Trial Events and Actions
+
+Since the only adaptation for an endpoint is via group sequential design, we can use `logrank` p-values of cumulative data, and independent increment is not adopted.
+
+::: panel-tabset
+## Interim
+
+```{r}
+action_at_interim <- function(trial, event_name){
+  
+  locked_data <- trial$get_locked_data(event_name)
+  
+  #' codes below this line are customized to conduct statistical tests and save results
+  
+  pfs <- fitLogrank(endpoint = 'pfs', placebo = 'placebo', data = locked_data)
+  
+  trial$bind(value = pfs, name = 'pfs_result')
+  
+  #' futility
+  trial$save(value = ifelse(pfs$z < .5, 'futile', 'efficacious'), name = 'futility')
+  
+}
+```
+
+## Final
+
+```{r}
+#' action at final analysis is very similar to the one at interim, 
+#' except that a graphical test is performed
+action_at_final <- function(trial, event_name){
+  
+  locked_data <- trial$get_locked_data(event_name)
+  
+  #' codes below this line are customized to conduct statistical tests and save results
+  
+  pfs <- fitLogrank(endpoint = 'pfs', placebo = 'placebo', data = locked_data)
+  
+  os <- fitLogrank(endpoint = 'os', placebo = 'placebo', data = locked_data)
+  
+  trial$bind(value = pfs, name = 'pfs_result')
+  trial$bind(value = os, name = 'os_result')
+  
+  #' extract logrank test results
+  pfs_result <- trial$get_custom_data('pfs_result')
+  os_result <- trial$get_custom_data('os_result')
+  
+  #' graphical test
+  gt <- 
+    GraphicalTesting$new(
+      alpha = c(0.01, 0.015), 
+      transition = matrix(c(0, 1, 1, 0), nrow = 2), 
+      alpha_spending = c('asOF', 'asP'), 
+      planned_max_info = c(530, 400), 
+      hypotheses = c('PFS', 'OS'), 
+      silent = TRUE
+    )
+  
+  #' input for graphical test
+  stats <- rbind(pfs_result, os_result) %>% 
+    mutate(order = c(1, 2, 2)) %>% 
+    mutate(hypotheses = c('PFS', 'PFS', 'OS')) %>% 
+    mutate(is_final = c(FALSE, TRUE, TRUE)) %>% 
+    mutate(max_info = c(530, 530, 400))
+  
+  print(stats)
+  
+  gt$test(stats)
+  
+  test_result <- gt$get_current_testing_results()
+  
+  event_time <- c(trial$get_event_time('interim analysis'), 
+                  trial$get_event_time('final analysis'))
+  
+  
+  #' save testing decisions for PFS and OS
+  trial$save(value = test_result$decision[test_result$hypothesis == 'PFS'], 
+             name = 'pfs_decision')
+  
+  trial$save(value = test_result$decision[test_result$hypothesis == 'OS'], 
+             name = 'os_decision')
+  
+  #' save time of making the decisions for PFS and OS
+  trial$save(value = event_time[test_result$order[test_result == 'PFS']], 
+             name = 'pfs_decision_time')
+  
+  trial$save(value = event_time[test_result$order[test_result == 'OS']], 
+             name = 'os_decision_time')
+  
+  
+}
+```
+:::
+
+We plan two trial events for interim and final analysis.
+
+::: panel-tabset
+## Interim
+
+```{r}
+interim <- event(name = 'interim analysis', 
+                 trigger_condition = 
+                   eventNumber(endpoint = 'pfs', n = 250), 
+                 action = action_at_interim)
+```
+
+## Final
+
+```{r}
+final <- event(name = 'final analysis', 
+               trigger_condition = (
+                 enrollment(n = 650) & 
+                   eventNumber(endpoint = 'os', n = 400)
+               ) | calendarTime(time = 40), 
+               action = action_at_final)
+```
+:::
+
+We then register the two trial events to a listener who will monitor the trial.
+
+```{r}
+#| output: false
+listener <- listener()
+#' register trial events with the listener
+listener$add_events(interim, final)
+```
+
+### Execute a Trial
+
+To execute a trial, we call the member function `run` in the controller of the trial and listener. Here we simulate one trial, so that a plot of cumulative events are generated automatically for each of the endpoints. We can set `n` to a larger integer for more replicates.
+
+```{r}
+controller <- controller(trial, listener)
+controller$run(n = 1, plot_event = TRUE)
+```
+
+### Extract the Output
+
+We can display information saved for each of the simulated trials by the member function `get_output`.
+
+```{r}
+controller$get_output() %>% 
+  kable(escape = TRUE) %>% 
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE,
+                position = "left") %>%
+  scroll_box(width = "100%")
+```

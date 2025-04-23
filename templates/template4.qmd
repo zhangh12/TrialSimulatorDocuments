@@ -1,0 +1,227 @@
+---
+title: "Template for Enrichment Design"
+format: html
+editor: visual
+---
+
+## Design
+
+We consider a randomized phase III study with an enrichment design.
+
+-   Start with one placebo arm and one treatment arm, with a 1:1 randomization ratio.
+-   Planned trial duration is up to 40 months.
+-   Randomize 50 patients per month for the first 6 months, then 65 patients per month until 800 patients are recruited.
+-   Dropout rate is 5% at month 12 and 12% at month 24.
+-   Two time-to-event endpoints `PFS` and `OS` and a binary endpoint patient-reported outcome (`PRO`).
+-   A binary biomarker is used to define subgroups `A` (35%) and `B` (65%) of the population.
+    -   In subgroup `A`, medians of `PFS` in placebo and treatment arms are 8.4 and 12.3 months, approximately a hazard ratio 0.68.
+    -   In the overall population, medians of `PFS` in placebo and treatment arms are 8.3 and 11.5 months, approximately a hazard ratio 0.72.
+    -   In subgroup `A`, medians of `OS` in placebo and treatment arm are 13.2 and 18.8 months, approximately a hazard ratio 0.70.
+    -   In the overall population, medians of `OS` in placebo and treatment arm are 14.5 and 19.3 months, approximately a hazard ratio 0.75.
+    -   Rates of `PRO` in placebo and high dose arms are 0.3 and 0.5.
+    -   `PRO` needs 3 months to generate a readout.
+-   A group sequential design is adopted.
+    -   Interim analysis is performed when 300 `PFS` events are observed.
+    -   Final analysis is performed for all three endpoints when 450 `OS` events are observed.
+
+## Implementation
+
+### Loading relevant packages
+
+```{r}
+#| output: false
+library(dplyr)
+library(TrialSimulator)
+library(kableExtra)
+set.seed(12345)
+```
+
+### Helper functions
+
+In this section, we define helper functions that are task-specific. For example, statistician may simulate correlated `PFS`, `OS` and `PRO` in various ways. For the purpose of illustration, we simulate independent endpoints. 
+
+A biomarker is generated to define subgroups of the population. `TrialSimulator` provides a helper function `solveMixtureExponentialDistribution` to derive median of the subgroup `B` given meidans in the overall population and the subgroup `A`. 
+
+```{r}
+#' Simulate correlated PFS and OS. Marginally, both endpoints follow exponential distribution. 
+#' @param n integer. Number of samples. 
+#' @param median_pfs numeric vector. Median of PFS in overall population and subgroup A. 
+#' @param median_os numeric vector. Median of OS in overall population and subgroup A.
+#' @param prop_subgroup_A numeric. Proportion of subgroup A.  
+correlated_pfs_os <- function(n, median_pfs, median_os, prop_subgroup_A){
+  
+  grp <- sample(c('A', 'B'), size = n, replace = TRUE, 
+                prob = c(prop_subgroup_A, 1 - prop_subgroup_A))
+  
+  median_pfs_A <- median_pfs[2]
+  median_pfs_B <- solveMixtureExponentialDistribution(weight1 = prop_subgroup_A, 
+                                                      median1 = median_pfs_A, 
+                                                      overall_median = median_pfs[1])
+  
+  pfs <- rexp(n, rate = log(2) / ifelse(grp == 'A', median_pfs_A, median_pfs_B))
+  
+  median_os_A <- median_os[2]
+  median_os_B <- solveMixtureExponentialDistribution(weight1 = prop_subgroup_A, 
+                                                     median1 = median_os_A, 
+                                                     overall_median = median_os[1])
+  
+  os <- rexp(n, rate = log(2) / ifelse(grp == 'A', median_os_A, median_os_B))
+  
+  data.frame(grp = grp, pfs = pfs, os = os, pfs_event = 1, os_event = 1)
+}
+```
+
+### Define Endpoints and Arms
+
+We define three endpoints in an arm together in the helper function. `readout` is specified for the endpoint `OR` as it is not a time-to-event endpoint.
+
+::: panel-tabset
+## Placebo
+
+```{r}
+pfs_and_os_in_pbo <- endpoint(name = c('pfs', 'os', 'grp'), 
+                              type = c('tte', 'tte', 'non-tte'), 
+                              readout = c(grp = 0), 
+                              generator = correlated_pfs_os, 
+                              median_pfs = c(8.3, 8.4), 
+                              median_os = c(14.5, 13.2), 
+                              prop_subgroup_A = .35)
+
+pro_in_pbo <- endpoint(name = 'pro', type = 'non-tte', readout = c(pro = 3), 
+                       generator = rbinom, size = 1, prob = .3)
+
+pbo <- arm(name = 'placebo')
+pbo$add_endpoints(pfs_and_os_in_pbo, pro_in_pbo)
+```
+
+## Treated
+
+```{r}
+pfs_and_os_in_trt <- endpoint(name = c('pfs', 'os', 'grp'), 
+                              type = c('tte', 'tte', 'non-tte'), 
+                              readout = c(grp = 0), 
+                              generator = correlated_pfs_os, 
+                              median_pfs = c(11.5, 12.3), 
+                              median_os = c(19.3, 18.8), 
+                              prop_subgroup_A = .35)
+
+pro_in_trt <- endpoint(name = 'pro', type = 'non-tte', readout = c(pro = 3), 
+                       generator = rbinom, size = 1, prob = .5)
+
+trt <- arm(name = 'treated')
+trt$add_endpoints(pfs_and_os_in_trt, pro_in_trt)
+```
+:::
+
+### Define A Trial
+
+We use the Weibull distribution to model dropout. The `TrialSimulator` package provides a helper function to compute the shape and scale parameters of the Weibull distribution.
+
+```{r}
+weibullDropout(time = c(12, 24), dropout_rate = c(.05, .12))
+```
+
+To define arms and a trial, we can
+
+```{r}
+#| output: false
+accrual_rate <- data.frame(end_time = c(6, Inf), 
+                           piecewise_rate = c(50, 65))
+
+trial <- trial(
+  name = 'trial-123', n_patients = 800, duration = 50, 
+  enroller = StaggeredRecruiter, accrual_rate = accrual_rate, 
+  dropout = rweibull, shape = 1.32, scale = 114.4
+)
+
+trial$add_arms(sample_ratio = c(1, 1), pbo, trt)
+```
+
+### Define Trial Events and Actions
+
+In this example, we don't implement the statistical tests. 
+
+::: panel-tabset
+## Interim
+
+```{r}
+action_at_interim <- function(trial, event_name){
+  
+  locked_data <- trial$get_locked_data(event_name)
+  
+  #' codes below this line are customized to conduct statistical tests and save results
+  #' here we only display a few lines of data snapshot
+  
+  head(locked_data)
+  
+}
+```
+
+## Final
+
+```{r}
+action_at_final <- function(trial, event_name){
+  
+  locked_data <- trial$get_locked_data(event_name)
+  
+  #' codes below this line are customized to conduct statistical tests and save results
+  #' here we only display a few lines of data snapshot
+  
+  head(locked_data)
+
+}
+  
+```
+:::
+
+We plan three trial events for dose selection, interim and final analysis.
+
+::: panel-tabset
+## Interim
+
+```{r}
+interim <- event(name = 'interim analysis', 
+                 trigger_condition = 
+                   eventNumber(endpoint = 'pfs', n = 300), 
+                 action = action_at_interim)
+```
+
+## Final
+
+```{r}
+final <- event(name = 'final analysis', 
+               trigger_condition = eventNumber(endpoint = 'os', n = 450), 
+               action = action_at_final)
+```
+:::
+
+We then register the two trial events to a listener who will monitor the trial.
+
+```{r}
+#| output: false
+listener <- listener()
+#' register trial events with the listener
+listener$add_events(interim, final)
+```
+
+### Execute a Trial
+
+To execute a trial, we call the member function `run` in the controller of the trial and listener. Here we simulate one trial, so that a plot of cumulative events are generated automatically for each of the endpoints. We can set `n` to a larger integer for more replicates.
+
+```{r}
+controller <- controller(trial, listener)
+controller$run(n = 1, plot_event = TRUE)
+```
+
+### Extract the Output
+
+We can display information saved for each of the simulated trials by the member function `get_output`. Note that even if we do nothing in the action function, time of trial events and event counts for endpoints are saved automatically. 
+
+```{r}
+controller$get_output() %>% 
+  kable(escape = TRUE) %>% 
+  kable_styling(bootstrap_options = "striped", 
+                full_width = FALSE,
+                position = "left") %>%
+  scroll_box(width = "100%")
+```
