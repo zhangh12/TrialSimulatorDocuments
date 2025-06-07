@@ -59,11 +59,11 @@ list(
   tar_map_rep(
     name = example3,
     command = {
-      simulate_example3(n = 1)
+      simulate_example3(n = 100)
     },
     #values = scenarios,
     batches = n_cores, 
-    reps = 10000 / n_cores,
+    reps = n_sims / n_cores,
     deployment = 'worker'
   )
   ,

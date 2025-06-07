@@ -72,8 +72,8 @@ tar_load(example1)
 
 with(example1 %>% head(10000), 
      data.table(
-       'Interim analysis time' = mean(`event_time_<interim analysis>`), 
-       'Final analysis time' = mean(`event_time_<final analysis>`), 
+       'Interim analysis time' = mean(`milestone_time_<interim analysis>`), 
+       'Final analysis time' = mean(`milestone_time_<final analysis>`), 
        'Power at interim' = mean(`decision_<interim>` == 'reject'), 
        'Overall power' = mean(`decision_<interim>` == 'reject' | 
                                 `decision_<final>` == 'reject'), 
@@ -81,8 +81,8 @@ with(example1 %>% head(10000),
                                                             `n_events_<interim analysis>_<patient_id>`,  
                                                             `n_events_<final analysis>_<patient_id>`)), 
        'Expected trial duration' = mean(ifelse(`decision_<interim>` == 'reject', 
-                                               `event_time_<interim analysis>`, 
-                                               `event_time_<final analysis>`))
+                                               `milestone_time_<interim analysis>`, 
+                                               `milestone_time_<final analysis>`))
      ) %>% 
        kable()
 )

@@ -11,7 +11,7 @@
 
 <meta name="author" content="Han Zhang" />
 
-<meta name="date" content="2025-03-27" />
+<meta name="date" content="2025-06-03" />
 
 <title>Power of Group Sequential Trial with a Time-to-Event Endpoint</title>
 
@@ -441,7 +441,7 @@ display: none;
 <h1 class="title toc-ignore">Power of Group Sequential Trial with a
 Time-to-Event Endpoint</h1>
 <h4 class="author">Han Zhang</h4>
-<h4 class="date">2025-03-27</h4>
+<h4 class="date">2025-06-03</h4>
 
 </div>
 
@@ -623,10 +623,10 @@ dropout rate(1) = 0.1, dropout rate(2) = 0.1, dropout time = 12.</p>
 
 with(example3 %&gt;% head(10000), 
      data.table(
-       &#39;1st interim analysis time&#39; = mean(`event_time_&lt;interim 1&gt;`), 
-       &#39;2nd interim analysis time&#39; = mean(`event_time_&lt;interim 2&gt;`), 
-       &#39;3rd interim analysis time&#39; = mean(`event_time_&lt;interim 3&gt;`), 
-       &#39;Final analysis time&#39; = mean(`event_time_&lt;final&gt;`), 
+       &#39;1st interim analysis time&#39; = mean(`milestone_time_&lt;interim 1&gt;`), 
+       &#39;2nd interim analysis time&#39; = mean(`milestone_time_&lt;interim 2&gt;`), 
+       &#39;3rd interim analysis time&#39; = mean(`milestone_time_&lt;interim 3&gt;`), 
+       &#39;Final analysis time&#39; = mean(`milestone_time_&lt;final&gt;`), 
        &#39;Power at 1st interim&#39; = mean(`decision1` == &#39;reject&#39;), 
        &#39;Power at 2nd interim&#39; = mean(`decision2` == &#39;reject&#39;), 
        &#39;Power at 3rd interim&#39; = mean(`decision3` == &#39;reject&#39;), 
@@ -668,15 +668,15 @@ with(example3 %&gt;% head(10000),
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">20.81298</td>
-<td align="right">23.93941</td>
-<td align="right">27.34002</td>
-<td align="right">35.20424</td>
-<td align="right">0.2418</td>
-<td align="right">0.3722</td>
-<td align="right">0.5026</td>
-<td align="right">0.7161</td>
-<td align="right">838.08</td>
+<td align="right">20.81193</td>
+<td align="right">23.93784</td>
+<td align="right">27.33995</td>
+<td align="right">35.2083</td>
+<td align="right">0.2544</td>
+<td align="right">0.3891</td>
+<td align="right">0.512</td>
+<td align="right">0.7263</td>
+<td align="right">833.25</td>
 </tr>
 </tbody>
 </table>

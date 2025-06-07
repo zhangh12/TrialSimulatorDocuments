@@ -3,46 +3,48 @@
 library(TrialSimulator)
 
 simulate_example3 <- function(n = 1, seed = NULL){
-  pfs <- Endpoint$new(name = 'pfs', type = 'tte', 
-                      generator = rexp, rate = -log(1-.2)/12)
-  pbo <- Arm$new(name = 'pbo')
+  pfs <- endpoint(name = 'pfs', type = 'tte', 
+                  generator = rexp, rate = -log(1-.2)/12)
+  pbo <- arm(name = 'pbo')
   pbo$add_endpoints(pfs)
   
-  pfs <- Endpoint$new(name = 'pfs', type = 'tte', 
-                      generator = rexp, rate = -log(1-.2)/12 * .85)
-  trt <- Arm$new(name = 'trt')
+  pfs <- endpoint(name = 'pfs', type = 'tte', 
+                  generator = rexp, rate = -log(1-.2)/12 * .85)
+  trt <- arm(name = 'trt')
   trt$add_endpoints(pfs)
   
-  trial <- Trial$new(name = 'trial', n_patients = 3000, duration = 100, 
-                     enroller = StaggeredRecruiter, 
-                     accrual_rate = data.frame(end_time = c(12, Inf), piecewise_rate = c(250, 250)), 
-                     dropout = rexp, rate = -log(1-.1)/12)
+  trial <- trial(
+    name = 'trial', seed = seed, 
+    n_patients = 3000, duration = 100, 
+    enroller = StaggeredRecruiter, 
+    accrual_rate = data.frame(end_time = c(12, Inf), piecewise_rate = c(250, 250)), 
+    dropout = rexp, rate = -log(1-.1)/12)
   
   trial$add_arms(sample_ratio = c(1, 1), trt, pbo)
   
-  action1 <- function(trial, event_name){
-    locked_data <- trial$get_locked_data(event_name)
+  action1 <- function(trial, milestone_name){
+    locked_data <- trial$get_locked_data(milestone_name)
     trial$bind(fitLogrank(endpoint = 'pfs', placebo = 'pbo', 
                           data = locked_data), 
                name = 'stats')
   }
   
-  action2 <- function(trial, event_name){
-    locked_data <- trial$get_locked_data(event_name)
+  action2 <- function(trial, milestone_name){
+    locked_data <- trial$get_locked_data(milestone_name)
     trial$bind(fitLogrank(endpoint = 'pfs', placebo = 'pbo', 
                           data = locked_data), 
                name = 'stats')
   }
   
-  action3 <- function(trial, event_name){
-    locked_data <- trial$get_locked_data(event_name)
+  action3 <- function(trial, milestone_name){
+    locked_data <- trial$get_locked_data(milestone_name)
     trial$bind(fitLogrank(endpoint = 'pfs', placebo = 'pbo', 
                           data = locked_data), 
                name = 'stats')
   }
   
-  action4 <- function(trial, event_name){
-    locked_data <- trial$get_locked_data(event_name)
+  action4 <- function(trial, milestone_name){
+    locked_data <- trial$get_locked_data(milestone_name)
     trial$bind(fitLogrank(endpoint = 'pfs', placebo = 'pbo', 
                           data = locked_data), 
                name = 'stats')
@@ -74,27 +76,31 @@ simulate_example3 <- function(n = 1, seed = NULL){
     trial$save(ret[4], 'decision4')
   }
   
-  interim1 <- Event$new(name = 'interim 1', 
-                        trigger_condition = eventNumber(endpoint = 'pfs', n = 1000*.6), 
+  interim1 <- milestone(name = 'interim 1', 
+                        trigger_condition = 
+                          eventNumber(endpoint = 'pfs', n = 1000*.6), 
                         action = action1)
   
-  interim2 <- Event$new(name = 'interim 2', 
-                        trigger_condition = eventNumber(endpoint = 'pfs', n = 1000*.7), 
+  interim2 <- milestone(name = 'interim 2', 
+                        trigger_condition = 
+                          eventNumber(endpoint = 'pfs', n = 1000*.7), 
                         action = action2)
   
-  interim3 <- Event$new(name = 'interim 3', 
-                        trigger_condition = eventNumber(endpoint = 'pfs', n = 1000*.8), 
+  interim3 <- milestone(name = 'interim 3', 
+                        trigger_condition = 
+                          eventNumber(endpoint = 'pfs', n = 1000*.8), 
                         action = action3)
   
-  final <- Event$new(name = 'final', 
-                        trigger_condition = eventNumber(endpoint = 'pfs', n = 1000), 
-                        action = action4)
+  final <- milestone(name = 'final', 
+                     trigger_condition = 
+                       eventNumber(endpoint = 'pfs', n = 1000), 
+                     action = action4)
   
   
-  listener <- Listener$new()
-  listener$add_events(interim1, interim2, interim3, final)
+  listener <- listener()
+  listener$add_milestones(interim1, interim2, interim3, final)
   
-  controller <- Controller$new(trial, listener)
+  controller <- controller(trial, listener)
   controller$run(n = n, plot_event = FALSE, silent = TRUE)
   
   controller$get_output()

@@ -137,7 +137,7 @@ trial <- trial(
 trial$add_arms(sample_ratio = c(1, 1), pbo, trt)
 ```
 
-### Define Trial Events and Actions
+### Define Trial Milestones and Actions
 
 In this example, we don't implement the statistical tests. 
 
@@ -145,9 +145,9 @@ In this example, we don't implement the statistical tests.
 ## Interim
 
 ```{r}
-action_at_interim <- function(trial, event_name){
+action_at_interim <- function(trial, milestone_name){
   
-  locked_data <- trial$get_locked_data(event_name)
+  locked_data <- trial$get_locked_data(milestone_name)
   
   #' codes below this line are customized to conduct statistical tests and save results
   #' here we only display a few lines of data snapshot
@@ -160,9 +160,9 @@ action_at_interim <- function(trial, event_name){
 ## Final
 
 ```{r}
-action_at_final <- function(trial, event_name){
+action_at_final <- function(trial, milestone_name){
   
-  locked_data <- trial$get_locked_data(event_name)
+  locked_data <- trial$get_locked_data(milestone_name)
   
   #' codes below this line are customized to conduct statistical tests and save results
   #' here we only display a few lines of data snapshot
@@ -174,34 +174,34 @@ action_at_final <- function(trial, event_name){
 ```
 :::
 
-We plan three trial events for dose selection, interim and final analysis.
+We plan three trial milestones for dose selection, interim and final analysis.
 
 ::: panel-tabset
 ## Interim
 
 ```{r}
-interim <- event(name = 'interim analysis', 
-                 trigger_condition = 
-                   eventNumber(endpoint = 'pfs', n = 300), 
-                 action = action_at_interim)
+interim <- milestone(name = 'interim analysis', 
+                     trigger_condition = 
+                       eventNumber(endpoint = 'pfs', n = 300), 
+                     action = action_at_interim)
 ```
 
 ## Final
 
 ```{r}
-final <- event(name = 'final analysis', 
-               trigger_condition = eventNumber(endpoint = 'os', n = 450), 
-               action = action_at_final)
+final <- milestone(name = 'final analysis', 
+                   trigger_condition = eventNumber(endpoint = 'os', n = 450), 
+                   action = action_at_final)
 ```
 :::
 
-We then register the two trial events to a listener who will monitor the trial.
+We then register the two trial milestones to a listener who will monitor the trial.
 
 ```{r}
 #| output: false
 listener <- listener()
-#' register trial events with the listener
-listener$add_events(interim, final)
+#' register trial milestones with the listener
+listener$add_milestones(interim, final)
 ```
 
 ### Execute a Trial
@@ -215,7 +215,7 @@ controller$run(n = 1, plot_event = TRUE)
 
 ### Extract the Output
 
-We can display information saved for each of the simulated trials by the member function `get_output`. Note that even if we do nothing in the action function, time of trial events and event counts for endpoints are saved automatically. 
+We can display information saved for each of the simulated trials by the member function `get_output`. Note that even if we do nothing in the action function, time of trial milestones and event counts for endpoints are saved automatically. 
 
 ```{r}
 controller$get_output() %>% 

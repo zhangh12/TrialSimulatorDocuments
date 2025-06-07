@@ -4,33 +4,34 @@ library(TrialSimulator)
 
 simulate_example2 <- function(n = 1, seed = NULL){
   #' endpoint in control arm
-  failure <- Endpoint$new(name = 'failure', type = 'non-tte', 
-                          generator = rbinom, size = 1, prob = .6, 
-                          readout = c(failure = 0))
+  failure <- endpoint(name = 'failure', type = 'non-tte', 
+                      generator = rbinom, size = 1, prob = .6, 
+                      readout = c(failure = 0))
   
-  pbo <- Arm$new(name = 'control')
+  pbo <- arm(name = 'control')
   pbo$add_endpoints(failure)
   
-  failure <- Endpoint$new(name = 'failure', type = 'non-tte', 
-                          generator = rbinom, size = 1, prob = .4, 
-                          readout = c(failure = 0))
+  failure <- endpoint(name = 'failure', type = 'non-tte', 
+                      generator = rbinom, size = 1, prob = .4, 
+                      readout = c(failure = 0))
   
-  trt <- Arm$new(name = 'treatment')
+  trt <- arm(name = 'treatment')
   trt$add_endpoints(failure)
   
   #' set arbitrary recruitment rate
   accrual_rate <- data.frame(end_time = c(1, Inf), 
                              piecewise_rate = c(10, 20))
   
-  trial <- Trial$new(name = 'Trial-1234', seed = seed, 
-                     n_patients = 266, duration = 1000, 
-                     enroller = StaggeredRecruiter, accrual_rate = accrual_rate, 
-                     dropout = NULL)
+  trial <- trial(
+    name = 'Trial-1234', seed = seed, 
+    n_patients = 266, duration = 1000, 
+    enroller = StaggeredRecruiter, accrual_rate = accrual_rate, 
+    dropout = NULL)
   
   trial$add_arms(sample_ratio = c(1, 1), trt, pbo)
   
-  action1 <- function(trial, event_name){
-    locked_data <- trial$get_locked_data(event_name)
+  action1 <- function(trial, milestone_name){
+    locked_data <- trial$get_locked_data(milestone_name)
     
     trial$bind(
       fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
@@ -40,8 +41,8 @@ simulate_example2 <- function(n = 1, seed = NULL){
     
   }
   
-  action2 <- function(trial, event_name){
-    locked_data <- trial$get_locked_data(event_name)
+  action2 <- function(trial, milestone_name){
+    locked_data <- trial$get_locked_data(milestone_name)
     
     trial$bind(
       fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
@@ -52,8 +53,8 @@ simulate_example2 <- function(n = 1, seed = NULL){
     
   }
   
-  action3 <- function(trial, event_name){
-    locked_data <- trial$get_locked_data(event_name)
+  action3 <- function(trial, milestone_name){
+    locked_data <- trial$get_locked_data(milestone_name)
     
     trial$bind(
       fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
@@ -94,22 +95,22 @@ simulate_example2 <- function(n = 1, seed = NULL){
     
   }
   
-  interim1 <- Event$new(name = 'interim 1', 
+  interim1 <- milestone(name = 'interim 1', 
                         trigger_condition = enrollment(n = 133), 
                         action = action1)
   
-  interim2 <- Event$new(name = 'interim 2', 
+  interim2 <- milestone(name = 'interim 2', 
                         trigger_condition = enrollment(n = 200), 
                         action = action2)
   
-  final <- Event$new(name = 'final', 
-                        trigger_condition = enrollment(n = 266), 
-                        action = action3)
+  final <- milestone(name = 'final', 
+                     trigger_condition = enrollment(n = 266), 
+                     action = action3)
   
-  listener <- Listener$new()
-  listener$add_events(interim1, interim2, final)
+  listener <- listener()
+  listener$add_milestones(interim1, interim2, final)
   
-  controller <- Controller$new(trial, listener)
+  controller <- controller(trial, listener)
   controller$run(n = n, plot_event = FALSE, silent = TRUE)
   
   controller$get_output()

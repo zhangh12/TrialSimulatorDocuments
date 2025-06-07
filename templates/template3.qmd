@@ -125,7 +125,7 @@ trial <- trial(
 trial$add_arms(sample_ratio = c(1, 1, 1), pbo, low, high)
 ```
 
-### Define Trial Events and Actions
+### Define Trial Milestones and Actions
 
 We conduct p-values of `PFS` and `OS` at interim and final analysis based on the `logrank` statistics and independent increment method. We could use the same approach to determine the $z$ statistic for futility analysis as well, however, for the sake of simplicity, we use the conventional $z$ statistic in this example.
 
@@ -133,9 +133,9 @@ We conduct p-values of `PFS` and `OS` at interim and final analysis based on the
 ## Dose Selection
 
 ```{r}
-action_at_dose_selection <- function(trial, event_name){
+action_at_dose_selection <- function(trial, milestone_name){
   
-  locked_data <- trial$get_locked_data(event_name)
+  locked_data <- trial$get_locked_data(milestone_name)
   
   #' codes below this line are customized to conduct statistical tests and save results
   
@@ -156,9 +156,9 @@ action_at_dose_selection <- function(trial, event_name){
 ## Interim
 
 ```{r}
-action_at_interim <- function(trial, event_name){
+action_at_interim <- function(trial, milestone_name){
   
-  locked_data <- trial$get_locked_data(event_name)
+  locked_data <- trial$get_locked_data(milestone_name)
   
   #' codes below this line are customized to conduct statistical tests and save results
   
@@ -177,7 +177,7 @@ action_at_interim <- function(trial, event_name){
 ```{r}
 #' action at final analysis is very similar to the one at interim, 
 #' except that a graphical test is performed
-action_at_final <- function(trial, event_name){
+action_at_final <- function(trial, milestone_name){
   
   #' codes below this line are customized to conduct statistical tests and save results
   
@@ -187,11 +187,11 @@ action_at_final <- function(trial, event_name){
   
   dt_pfs <- trial$dunnettTest(endpoint = 'pfs', placebo = 'placebo',
                               treatments = c('high', 'low'),
-                              events = c('dose selection', 'interim analysis', 'final analysis'),
+                              milestones = c('dose selection', 'interim analysis', 'final analysis'),
                               planned_info = pinfo_pfs)
   
   ct_pfs <- trial$closedTest(dt_pfs, treatments = c('high', 'low'),
-                             events = c('interim analysis', 'final analysis'),
+                             milestones = c('interim analysis', 'final analysis'),
                              alpha = .01, alpha_spending = 'asOF')
   
   ## test OS
@@ -200,11 +200,11 @@ action_at_final <- function(trial, event_name){
   
   dt_os <- trial$dunnettTest(endpoint = 'os', placebo = 'placebo', 
                              treatments = c('high', 'low'), 
-                             events = c('dose selection', 'final analysis'), 
+                             milestones = c('dose selection', 'final analysis'), 
                              planned_info = pinfo_os)
   
   ct_os <- trial$closedTest(dt_os, treatments = c('high', 'low'), 
-                            events = c('final analysis'),
+                            milestones = c('final analysis'),
                             alpha = .015, alpha_spending = 'asOF')
   
   trial$save(value = ct_pfs$decision[ct_pfs$arm == 'high'], name = 'pfs_high_decision')
@@ -220,46 +220,46 @@ action_at_final <- function(trial, event_name){
 ```
 :::
 
-We plan three trial events for dose selection, interim and final analysis.
+We plan three trial milestones for dose selection, interim and final analysis.
 
 ::: panel-tabset
 ## Dose selection
 
 ```{r}
 dose_selection <- 
-  event(name = 'dose selection', 
-        trigger_condition = 
-          eventNumber(endpoint = 'or', n = 200, arms = c('low', 'high')), 
-        action = action_at_dose_selection)
+  milestone(name = 'dose selection', 
+            trigger_condition = 
+              eventNumber(endpoint = 'or', n = 200, arms = c('low', 'high')), 
+            action = action_at_dose_selection)
 ```
 
 ## Interim
 
 ```{r}
-interim <- event(name = 'interim analysis', 
-                 trigger_condition = 
-                   eventNumber(endpoint = 'pfs', n = 250), 
-                 action = action_at_interim)
+interim <- milestone(name = 'interim analysis', 
+                     trigger_condition = 
+                       eventNumber(endpoint = 'pfs', n = 250), 
+                     action = action_at_interim)
 ```
 
 ## Final
 
 ```{r}
-final <- event(name = 'final analysis', 
-               trigger_condition = (
-                 eventNumber(endpoint = 'os', n = 450)
-               ) | calendarTime(time = 50), 
-               action = action_at_final)
+final <- milestone(name = 'final analysis', 
+                   trigger_condition = (
+                     eventNumber(endpoint = 'os', n = 450)
+                     ) | calendarTime(time = 50), 
+                   action = action_at_final)
 ```
 :::
 
-We then register the three trial events to a listener who will monitor the trial.
+We then register the three trial milestones to a listener who will monitor the trial.
 
 ```{r}
 #| output: false
 listener <- listener()
-#' register trial events with the listener
-listener$add_events(dose_selection, interim, final)
+#' register trial milestones with the listener
+listener$add_milestones(dose_selection, interim, final)
 ```
 
 ### Execute a Trial
