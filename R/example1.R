@@ -45,8 +45,7 @@ simulate_example1 <- function(n = 1, seed = NULL){
   }
   
   interim <- milestone(name = 'interim analysis', 
-                       trigger_condition = 
-                         eventNumber(endpoint = 'pfs', n = 232), 
+                       when = eventNumber(endpoint = 'pfs', n = 232), 
                        action = interim_action)
   
   final_action <- function(trial, milestone_name){
@@ -83,8 +82,7 @@ simulate_example1 <- function(n = 1, seed = NULL){
   }
   
   final <- milestone(name = 'final analysis', 
-                     trigger_condition = 
-                       eventNumber(endpoint = 'pfs', n = 351), 
+                     when = eventNumber(endpoint = 'pfs', n = 351), 
                      action = final_action)
   
   

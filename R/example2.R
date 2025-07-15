@@ -96,15 +96,15 @@ simulate_example2 <- function(n = 1, seed = NULL){
   }
   
   interim1 <- milestone(name = 'interim 1', 
-                        trigger_condition = enrollment(n = 133), 
+                        when = enrollment(n = 133), 
                         action = action1)
   
   interim2 <- milestone(name = 'interim 2', 
-                        trigger_condition = enrollment(n = 200), 
+                        when = enrollment(n = 200), 
                         action = action2)
   
   final <- milestone(name = 'final', 
-                     trigger_condition = enrollment(n = 266), 
+                     when = enrollment(n = 266), 
                      action = action3)
   
   listener <- listener()

@@ -77,23 +77,19 @@ simulate_example3 <- function(n = 1, seed = NULL){
   }
   
   interim1 <- milestone(name = 'interim 1', 
-                        trigger_condition = 
-                          eventNumber(endpoint = 'pfs', n = 1000*.6), 
+                        when = eventNumber(endpoint = 'pfs', n = 1000*.6), 
                         action = action1)
   
   interim2 <- milestone(name = 'interim 2', 
-                        trigger_condition = 
-                          eventNumber(endpoint = 'pfs', n = 1000*.7), 
+                        when = eventNumber(endpoint = 'pfs', n = 1000*.7), 
                         action = action2)
   
   interim3 <- milestone(name = 'interim 3', 
-                        trigger_condition = 
-                          eventNumber(endpoint = 'pfs', n = 1000*.8), 
+                        when = eventNumber(endpoint = 'pfs', n = 1000*.8), 
                         action = action3)
   
   final <- milestone(name = 'final', 
-                     trigger_condition = 
-                       eventNumber(endpoint = 'pfs', n = 1000), 
+                     when = eventNumber(endpoint = 'pfs', n = 1000), 
                      action = action4)
   
   
