@@ -4,7 +4,7 @@ library(targets)
 library(tarchetypes)
 library(tibble)
 
-n_cores <- future::availableCores()
+n_cores <- 3
 
 tar_option_set(
   packages = c('tidyverse', 'ggplot2', 'data.table', 

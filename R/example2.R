@@ -30,8 +30,8 @@ simulate_example2 <- function(n = 1, seed = NULL){
   
   trial$add_arms(sample_ratio = c(1, 1), trt, pbo)
   
-  action1 <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
+  action1 <- function(trial){
+    locked_data <- trial$get_locked_data('interim 1')
     
     trial$bind(
       fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
@@ -41,8 +41,8 @@ simulate_example2 <- function(n = 1, seed = NULL){
     
   }
   
-  action2 <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
+  action2 <- function(trial){
+    locked_data <- trial$get_locked_data('interim 2')
     
     trial$bind(
       fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
@@ -53,8 +53,8 @@ simulate_example2 <- function(n = 1, seed = NULL){
     
   }
   
-  action3 <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
+  action3 <- function(trial){
+    locked_data <- trial$get_locked_data('final')
     
     trial$bind(
       fitFarringtonManning(endpoint = 'failure', placebo = 'control', 
@@ -90,8 +90,6 @@ simulate_example2 <- function(n = 1, seed = NULL){
     trial$save(ret[1], name = 'decision_<interim1>')
     trial$save(ret[2], name = 'decision_<interim2>')
     trial$save(ret[3], name = 'decision_<final>')
-    
-    NULL
     
   }
   

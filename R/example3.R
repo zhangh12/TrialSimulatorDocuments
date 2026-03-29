@@ -22,31 +22,39 @@ simulate_example3 <- function(n = 1, seed = NULL){
   
   trial$add_arms(sample_ratio = c(1, 1), trt, pbo)
   
-  action1 <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
-    trial$bind(fitLogrank(endpoint = 'pfs', placebo = 'pbo', 
-                          data = locked_data), 
+  action1 <- function(trial){
+    locked_data <- trial$get_locked_data('interim 1')
+    trial$bind(fitLogrank(Surv(pfs, pfs_event) ~ arm, 
+                          placebo = 'pbo', 
+                          data = locked_data, 
+                          alternative = 'less'), 
                name = 'stats')
   }
   
-  action2 <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
-    trial$bind(fitLogrank(endpoint = 'pfs', placebo = 'pbo', 
-                          data = locked_data), 
+  action2 <- function(trial){
+    locked_data <- trial$get_locked_data('interim 2')
+    trial$bind(fitLogrank(Surv(pfs, pfs_event) ~ arm, 
+                          placebo = 'pbo', 
+                          data = locked_data, 
+                          alternative = 'less'), 
                name = 'stats')
   }
   
-  action3 <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
-    trial$bind(fitLogrank(endpoint = 'pfs', placebo = 'pbo', 
-                          data = locked_data), 
+  action3 <- function(trial){
+    locked_data <- trial$get_locked_data('interim 3')
+    trial$bind(fitLogrank(Surv(pfs, pfs_event) ~ arm, 
+                          placebo = 'pbo', 
+                          data = locked_data, 
+                          alternative = 'less'), 
                name = 'stats')
   }
   
-  action4 <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
-    trial$bind(fitLogrank(endpoint = 'pfs', placebo = 'pbo', 
-                          data = locked_data), 
+  action4 <- function(trial){
+    locked_data <- trial$get_locked_data('final')
+    trial$bind(fitLogrank(Surv(pfs, pfs_event) ~ arm, 
+                          placebo = 'pbo', 
+                          data = locked_data, 
+                          alternative = 'less'), 
                name = 'stats')
     
     gst <- GroupSequentialTest$new(alpha = .025, alpha_spending = 'asOF', 

@@ -34,26 +34,29 @@ simulate_example1 <- function(n = 1, seed = NULL){
   
   trial$add_arms(sample_ratio = c(1, 1), pbo, trt)
   
-  interim_action <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
+  interim_action <- function(trial){
+    locked_data <- trial$get_locked_data('interim analysis')
     
-    trial$bind(fitCoxph(endpoint = 'pfs', 
+    trial$bind(fitCoxph(Surv(pfs, pfs_event) ~ arm, 
                         placebo = 'control', 
-                        data = locked_data), 
+                        data = locked_data, 
+                        alternative = 'less', 
+                        scale = 'log hazard ratio'), 
                name = 'stats')
-    NULL
   }
   
   interim <- milestone(name = 'interim analysis', 
                        when = eventNumber(endpoint = 'pfs', n = 232), 
                        action = interim_action)
   
-  final_action <- function(trial, milestone_name){
-    locked_data <- trial$get_locked_data(milestone_name)
+  final_action <- function(trial){
+    locked_data <- trial$get_locked_data('final analysis')
     
-    trial$bind(fitCoxph(endpoint = 'pfs', 
+    trial$bind(fitCoxph(Surv(pfs, pfs_event) ~ arm, 
                         placebo = 'control', 
-                        data = locked_data), 
+                        data = locked_data, 
+                        alternative = 'less', 
+                        scale = 'log hazard ratio'), 
                name = 'stats')
     
     gst <- GroupSequentialTest$new(
@@ -77,7 +80,6 @@ simulate_example1 <- function(n = 1, seed = NULL){
     
     trial$save(ret[1], name = 'decision_<interim>')
     trial$save(ret[2], name = 'decision_<final>')
-    NULL
     
   }
   
